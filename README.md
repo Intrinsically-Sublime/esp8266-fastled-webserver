@@ -1,7 +1,37 @@
 FastLED + ESP8266 Web Server
 =========
 
-Control an addressable LED strip with an ESP8266 via a web browser or infrared remote control.
+### Custom version of Jason Coons FastLED webserver for Novel Mutations Costume Controllers (LiPo battery powered ESP8266 based boards)
+It will work with any ESP8266 based controller.
+
+#### Some of the changes from original version by Jason Coon.
+1) All patterns work with XY matrices including irregular matrices.
+2) Fire with custom palettes in their own drop down based on the colors emitted when certain elements are burnt.
+3) Rotating color palettes for fire.
+4) Removed infrared control.
+5) Added WiFi transmission power setting.
+6) Remove twinkle functions.
+7) Made twinkleFOX use its own palette dropdown to clean up pattern drop down and added a couple of palettes to twinkleFOX from twinkle.
+8) Most patterns are now affected by the speed setting.
+9) All patterns list which settings affect them (in the drop down next to their name).
+10) Remove need for Glyphs, Icons and Fonts by using HTML entities in their place. It now fits on an ESP-01 properly.
+11) Removed unused functions to cleanup code.
+12) Made all patterns capable of addressing more than 256 LEDs.
+
+#### Custom irregular XY map generator based on Garrett Maces
+https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
+
+#### ToDo
+* Add button control for 5 button Dpad for CC4P
+* Add button control for 2 buttons on CC2
+* Add MSGEQ7 patterns for XY matrix
+* Add rain patterns
+* Add firewroks patterns
+* Add bleeding patterns
+* Add Scrolling text
+
+
+
 
 Hardware
 --------

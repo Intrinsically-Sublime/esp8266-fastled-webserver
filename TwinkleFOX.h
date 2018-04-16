@@ -56,7 +56,7 @@
 //  23/8ths of the system clock (i.e. nearly 3x).
 //
 //  On a basic Arduino Uno or Leonardo, this code can twinkle 300+ pixels
-//  smoothly at over 50 updates per seond.
+//  smoothly at over 50 updates per second.
 //
 //  -Mark Kriegsman, December 2015
 
@@ -305,86 +305,76 @@ const TProgmemRGBPalette16 Ice_p FL_PROGMEM =
   Ice_Blue2, Ice_Blue2, Ice_Blue2, Ice_Blue3
 };
 
-void redGreenWhiteTwinkles()
+#define Incandescent_White 0xE1A024
+const TProgmemRGBPalette16 Incandescent_p FL_PROGMEM =
 {
-  twinkleFoxPalette = RedGreenWhite_p;
-  drawTwinkles();
+	Incandescent_White, Incandescent_White, Incandescent_White, Incandescent_White,
+	Incandescent_White, Incandescent_White, Incandescent_White, Incandescent_White,
+	Incandescent_White, Incandescent_White, Incandescent_White, Incandescent_White,
+	Incandescent_White, Incandescent_White, Incandescent_White, Incandescent_White
+};
+
+const CRGBPalette16 twinklePalettes[] = {
+	RetroC9_p,
+	RedWhite_p,
+	BlueWhite_p,
+	RedGreenWhite_p,
+	FairyLight_p,
+	Snow_p,
+	Holly_p,
+	Ice_p,
+	PartyColors_p,
+	ForestColors_p,
+	LavaColors_p,
+	HeatColors_p,
+	CloudColors_p,
+	OceanColors_p,
+	RainbowColors_p,
+	Incandescent_p
+};
+
+const uint8_t twinklePaletteCount = ARRAY_SIZE(twinklePalettes);
+
+const String twinklePaletteNames[twinklePaletteCount] = {
+	"Retro C9 Twinkles",
+	"Red & White Twinkles",
+	"Blue & White Twinkles",
+	"Red, Green & White Twinkles",
+	"Fairy Light Twinkles",
+	"Snow 2 Twinkles",
+	"Holly Twinkles",
+	"Ice Twinkles",
+	"Party Twinkles",
+	"Forest Twinkles",
+	"Lava Twinkles",
+	"Fire Twinkles",
+	"Cloud 2 Twinkles",
+	"Ocean Twinkles",
+	"Rainbow Twinkles",
+	"Incandescent Twinkles"
+};
+
+void setTwinklePalette(uint8_t value)
+{
+	if (value >= twinklePaletteCount) {
+		value = twinklePaletteCount - 1;
+	}
+
+	currentTwinklePaletteIndex = value;
+	twinkleFoxPalette = twinklePalettes[currentTwinklePaletteIndex];
+
+	EEPROM.write(10, currentTwinklePaletteIndex);
+	EEPROM.commit();
+
+	broadcastInt("twinklePalette", currentTwinklePaletteIndex);
 }
 
-void hollyTwinkles()
+void setTwinklePaletteName(String name)
 {
-  twinkleFoxPalette = Holly_p;
-  drawTwinkles();
-}
-
-void redWhiteTwinkles()
-{
-  twinkleFoxPalette = RedWhite_p;
-  drawTwinkles();
-}
-
-void blueWhiteTwinkles()
-{
-  twinkleFoxPalette = BlueWhite_p;
-  drawTwinkles();
-}
-
-void fairyLightTwinkles()
-{
-  twinkleFoxPalette = FairyLight_p;
-  drawTwinkles();
-}
-
-void snow2Twinkles()
-{
-  twinkleFoxPalette = Snow_p;
-  drawTwinkles();
-}
-
-void iceTwinkles()
-{
-  twinkleFoxPalette = Ice_p;
-  drawTwinkles();
-}
-
-void retroC9Twinkles()
-{
-  twinkleFoxPalette = RetroC9_p;
-  drawTwinkles();
-}
-
-void partyTwinkles()
-{
-  twinkleFoxPalette = PartyColors_p;
-  drawTwinkles();
-}
-
-void forestTwinkles()
-{
-  twinkleFoxPalette = ForestColors_p;
-  drawTwinkles();
-}
-
-void lavaTwinkles()
-{
-  twinkleFoxPalette = LavaColors_p;
-  drawTwinkles();
-}
-
-void fireTwinkles()
-{
-  twinkleFoxPalette = HeatColors_p;
-  drawTwinkles();
-}
-
-void cloud2Twinkles()
-{
-  twinkleFoxPalette = CloudColors_p;
-  drawTwinkles();
-}
-
-void oceanTwinkles()
-{
-  twinkleFoxPalette = OceanColors_p;
-  drawTwinkles();
+	for(uint8_t i = 0; i < twinklePaletteCount; i++) {
+		if(twinklePaletteNames[i] == name) {
+			setTwinklePalette(i);
+			break;
+		}
+	}
 }
