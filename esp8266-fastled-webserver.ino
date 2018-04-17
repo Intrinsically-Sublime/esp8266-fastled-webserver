@@ -635,6 +635,12 @@ void loop() {
 
 	if (autoplay && (millis() > autoPlayTimeout)) {
 		adjustPattern(true);
+		// change color palettes once each time through all patterns when in autoplay mode
+		if (currentPatternIndex == 0) {
+			currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
+			currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
+			currentTwinklePaletteIndex = (currentTwinkleletteIndex+1)%twinklePaletteCount;
+		}
 		autoPlayTimeout = millis() + (autoplayDuration * 1000);
 	}
 
