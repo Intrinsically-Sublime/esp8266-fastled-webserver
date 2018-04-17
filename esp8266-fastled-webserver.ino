@@ -635,12 +635,7 @@ void loop() {
 
 	if (autoplay && (millis() > autoPlayTimeout)) {
 		adjustPattern(true);
-		// change color palettes once each time through all patterns when in autoplay mode
-		if (currentPatternIndex == 0) {
-			currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
-			currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
-			currentTwinklePaletteIndex = (currentTwinklePaletteIndex+1)%twinklePaletteCount;
-		}
+		rotatePalettes();
 		autoPlayTimeout = millis() + (autoplayDuration * 1000);
 	}
 
@@ -799,6 +794,19 @@ void adjustPattern(bool up)
 	}
 
 	broadcastInt("pattern", currentPatternIndex);
+}
+
+// change color palettes once each time through patterns when in autoplay mode
+void rotatePalettes()
+{
+	if (currentPatternIndex == 0) {
+		currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
+		currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
+		currentTwinklePaletteIndex = (currentTwinklePaletteIndex+1)%twinklePaletteCount;
+	}
+	broadcastInt("twinklePalette", currentTwinklePaletteIndex);
+	broadcastInt("firePalette", currentFirePaletteIndex);
+	broadcastInt("palette", currentPaletteIndex);
 }
 
 void setPattern(uint8_t value)
