@@ -639,7 +639,7 @@ void loop() {
 		if (currentPatternIndex == 0) {
 			currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
 			currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
-			currentTwinklePaletteIndex = (currentTwinkleletteIndex+1)%twinklePaletteCount;
+			currentTwinklePaletteIndex = (currentTwinklePaletteIndex+1)%twinklePaletteCount;
 		}
 		autoPlayTimeout = millis() + (autoplayDuration * 1000);
 	}
