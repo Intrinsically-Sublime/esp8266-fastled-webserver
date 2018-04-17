@@ -1,7 +1,7 @@
 FastLED + ESP8266 Web Server
 =========
 
-### Custom version of Jason Coons FastLED webserver for Novel Mutations Costume Controllers (LiPo battery powered ESP8266 based boards)
+### Custom version of Jason Coons FastLED webserver for Novel Mutations Costume Controllers (LiPo battery powered ESP8266 based boards with MSGEQ7 and Microphone)
 It will work with any ESP8266 based controller.
 
 #### Some of the changes from original version by Jason Coon.
@@ -28,45 +28,12 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Add rain patterns
 * Add firewroks patterns
 * Add bleeding patterns
-* Add Scrolling text
-
-
+* Add scrolling text
 
 
 Hardware
 --------
-
-##### ESP8266 development board
-
-[![Wemos D1 Mini Pro & Headers](https://ae01.alicdn.com/kf/HTB1P1KVaMsSMeJjSsphq6xuJFXah/WEMOS-D1-mini-Pro-V1-1-0-16M-bytes-external-antenna-connector-ESP8266-WIFI-Internet-of.jpg_200x200.jpg)](https://www.aliexpress.com/item/WEMOS-D1-mini-Pro-16M-bytes-external-antenna-connector-ESP8266-WIFI-Internet-of-Things-development-board/32724692514.html)
-
-[Wemos D1 Mini Pro & Headers](https://www.aliexpress.com/item/WEMOS-D1-mini-Pro-16M-bytes-external-antenna-connector-ESP8266-WIFI-Internet-of-Things-development-board/32724692514.html)
-
-or
-
-[![Adafruit HUZZAH ESP8266 Breakout](https://cdn-shop.adafruit.com/310x233/2471-10.jpg)](https://www.adafruit.com/products/2471)
-
-[Adafruit HUZZAH ESP8266 Breakout](https://www.adafruit.com/products/2471)
-
-##### Addressable LED strip
-
-[![Adafruit NeoPixel Ring](https://www.adafruit.com/images/145x109/1586-00.jpg)](https://www.adafruit.com/product/1586)
-
-[Adafruit NeoPixel Ring]
-
-Other hardware:
-
-* [3.3V to 5V Logic Level Shifter](http://www.digikey.com/product-detail/en/texas-instruments/SN74HCT245N/296-1612-5-ND/277258) (required if LEDs "glitch")
-
-Recommended by [Adafruit NeoPixel "Best Practices"](https://learn.adafruit.com/adafruit-neopixel-uberguide/best-practices) to help protect LEDs from current onrush:
-* [1000µF Capacitor](http://www.digikey.com/product-detail/en/panasonic-electronic-components/ECA-1EM102/P5156-ND/245015)
-* [300 to 500 Ohm resistor](https://www.digikey.com/product-detail/en/stackpole-electronics-inc/CF14JT470R/CF14JT470RCT-ND/1830342)
-
-Optional shield to make everything more tidy:
-
-[![Wemos D1 Mini ESP8266 LED & Level Shifter Shield](https://d3s5r33r268y59.cloudfront.net/13194/products/thumbs/2017-05-06T15:02:37.208Z-IMG_20170506_100623.jpg.114x76_q85_pad_rcrop.jpg)](https://www.tindie.com/products/jasoncoon/wemos-d1-mini-esp8266-led-and-level-shifter-shield/)
-
-[Wemos D1 Mini ESP8266 LED & Level Shifter Shield](https://www.tindie.com/products/jasoncoon/wemos-d1-mini-esp8266-led-and-level-shifter-shield)
+To be updated
 
 Features
 --------
@@ -95,10 +62,9 @@ The app is installed via the Arduino IDE which can be [downloaded here](https://
 The app depends on the following libraries. They must either be downloaded from GitHub and placed in the Arduino 'libraries' folder, or installed as [described here](https://www.arduino.cc/en/Guide/Libraries) by using the Arduino library manager.
 
 * [FastLED](https://github.com/FastLED/FastLED)
-* [IRremoteESP8266](https://github.com/sebastienwarin/IRremoteESP8266)
 * [Arduino WebSockets](https://github.com/Links2004/arduinoWebSockets)
 
-Download the app code from GitHub using the green Clone or Download button from [the GitHub project main page](https://github.com/jasoncoon/esp8266-fastled-webserver) and click Download ZIP. Decompress the ZIP file in your Arduino sketch folder.
+Download the app code from GitHub using the green Clone or Download button from [the GitHub project main page](https://github.com/Intrinsically-Sublime/esp8266-fastled-webserver/tree/CCx_8266) and click Download ZIP. Decompress the ZIP file in your Arduino sketch folder.
 
 The web app needs to be uploaded to the ESP8266's SPIFFS.  You can do this within the Arduino IDE after installing the [Arduino ESP8266FS tool](http://esp8266.github.io/Arduino/versions/2.3.0/doc/filesystem.html#uploading-files-to-file-system).
 
@@ -121,11 +87,3 @@ REST Web services
 -----------------
 
 The firmware implements basic [RESTful web services](https://en.wikipedia.org/wiki/Representational_state_transfer) using the ESP8266WebServer library.  Current values are requested with HTTP GETs, and values are set with POSTs using query string parameters.  It can run in connected or standalone access point modes.
-
-Infrared Remote Control
------------------------
-
-Control via infrared remote control is also supported, via the [ESP8266 port of the IRremote library](https://github.com/sebastienwarin/IRremoteESP8266).
-
-[Adafruit NeoPixel Ring]:https://www.adafruit.com/product/1586
-[Adafruit HUZZAH ESP8266 Breakout]:https://www.adafruit.com/products/2471
