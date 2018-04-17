@@ -17,6 +17,7 @@ It will work with any ESP8266 based controller.
 10) Remove need for Glyphs, Icons and Fonts by using HTML entities in their place. It now fits on an ESP-01 properly.
 11) Removed unused functions to cleanup code.
 12) Made all patterns capable of addressing more than 256 LEDs.
+13) Rotate palettes every time through patterns in autoplay mode.
 
 #### Custom irregular XY map generator based on Garrett Maces
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
