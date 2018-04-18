@@ -182,6 +182,64 @@ uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
 CRGB solidColor = CRGB::Blue;
 
+typedef struct {
+  CRGBPalette16 palette;
+   String name;
+ } PaletteAndName;
+typedef PaletteAndName PaletteAndNameList[];
+
+const CRGBPalette16 palettes[] = {
+	RainbowColors_p,
+	RainbowStripeColors_p,
+	CloudColors_p,
+	LavaColors_p,
+	OceanColors_p,
+	ForestColors_p,
+	PartyColors_p,
+	HeatColors_p
+};
+
+const uint8_t paletteCount = ARRAY_SIZE(palettes);
+
+const String paletteNames[paletteCount] = {
+	"Rainbow",
+	"Rainbow Stripe",
+	"Cloud",
+	"Lava",
+	"Ocean",
+	"Forest",
+	"Party",
+	"Heat",
+};
+
+CRGBPalette16 RotatingFire_p(WoodFireColors_p);
+
+const CRGBPalette16 firePalettes[] = {
+	WoodFireColors_p,
+	SodiumFireColors_p,
+	CopperFireColors_p,
+	AlcoholFireColors_p,
+	RubidiumFireColors_p,
+	PotassiumFireColors_p,
+	LithiumFireColors_p,
+	RotatingFire_p
+};
+
+CRGBPalette16 TargetFire_p( firePalettes[0] );
+
+const uint8_t firePaletteCount = ARRAY_SIZE(firePalettes);
+
+const String firePaletteNames[firePaletteCount] = {
+	"Wood -- Orange",
+	"Sodium -- Yellow",
+	"Copper -- Green",
+	"Alcohol -- Blue",
+	"Rubidium -- Indigo",
+	"Potassium -- Violet",
+	"Lithium -- Red",
+	"Rotating -- ↻"
+};
+
 typedef void (*Pattern)();
 typedef Pattern PatternList[];
 typedef struct {
@@ -214,62 +272,6 @@ PatternAndNameList patterns = {
 
 const uint8_t patternCount = ARRAY_SIZE(patterns);
 
-typedef struct {
-  CRGBPalette16 palette;
-   String name;
- } PaletteAndName;
-typedef PaletteAndName PaletteAndNameList[];
-
-const CRGBPalette16 palettes[] = {
-	RainbowColors_p,
-	RainbowStripeColors_p,
-	CloudColors_p,
-	LavaColors_p,
-	OceanColors_p,
-	ForestColors_p,
-	PartyColors_p,
-	HeatColors_p
-};
-
-const uint8_t paletteCount = ARRAY_SIZE(palettes);
-
-const String paletteNames[paletteCount] = {
-	"Rainbow",
-	"Rainbow Stripe",
-	"Cloud",
-	"Lava",
-	"Ocean",
-	"Forest",
-	"Party",
-	"Heat",
-};
-
-CRGBPalette16 RotatingFire_p(WoodFireColors_p);
-CRGBPalette16 TargetFire_p(SodiumFireColors_p);
-
-const CRGBPalette16 firePalettes[] = {
-	WoodFireColors_p,
-	SodiumFireColors_p,
-	CopperFireColors_p,
-	AlcoholFireColors_p,
-	RubidiumFireColors_p,
-	PotassiumFireColors_p,
-	LithiumFireColors_p,
-	RotatingFire_p
-};
-
-const uint8_t firePaletteCount = ARRAY_SIZE(firePalettes);
-
-const String firePaletteNames[firePaletteCount] = {
-	"Wood -- Orange",
-	"Sodium -- Yellow",
-	"Copper -- Green",
-	"Alcohol -- Blue",
-	"Rubidium -- Indigo",
-	"Potassium -- Violet",
-	"Lithium -- Red",
-	"Rotating -- ↻"
-};
 
 #include "Fields.h"
 
@@ -305,8 +307,6 @@ void setup() {
 	EEPROM.begin(512);
 	loadSettings();
 
-//  irReceiver.enableIRIn(); // Start the receiver
-
 	#ifdef SERIAL_OUTPUT
 	Serial.println();
 	Serial.print( F("Heap: ") ); Serial.println(system_get_free_heap_size());
@@ -334,9 +334,6 @@ void setup() {
 		}
 		#endif
 	}
-
-	//disabled due to https://github.com/jasoncoon/esp8266-fastled-webserver/issues/62
-	//initializeWiFi();
 
 	setupWiFi();
 
@@ -948,7 +945,7 @@ void fire()
 	random16_add_entropy(random(256));
 
 	// Array of temperature readings at each simulation cell
-	static int_fast16_t heat[MATRIX_WIDTH][MATRIX_HEIGHT];
+	static int_fast16_t heat[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
 
 	CRGBPalette16 fire_p( CRGB::Black);
 
@@ -978,7 +975,7 @@ void fire()
 
 		// Step 4.  Map from heat cells to LED colors
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
-			leds[XY(x,y)] = ColorFromPalette(fire_p, scale8(heat[x][y], 190));
+			leds[XY(x,y)] = ColorFromPalette(fire_p, scale8(heat[x][y], 255));
 		}
 	}
 }

@@ -315,7 +315,7 @@ const TProgmemRGBPalette16 Incandescent_p FL_PROGMEM =
 };
 
 const CRGBPalette16 twinklePalettes[] = {
-	RetroC9_p,
+	Incandescent_p,
 	RedWhite_p,
 	BlueWhite_p,
 	RedGreenWhite_p,
@@ -330,13 +330,13 @@ const CRGBPalette16 twinklePalettes[] = {
 	CloudColors_p,
 	OceanColors_p,
 	RainbowColors_p,
-	Incandescent_p
+	RetroC9_p
 };
 
 const uint8_t twinklePaletteCount = ARRAY_SIZE(twinklePalettes);
 
 const String twinklePaletteNames[twinklePaletteCount] = {
-	"Retro C9 Twinkles",
+	"Incandescent Twinkles",
 	"Red & White Twinkles",
 	"Blue & White Twinkles",
 	"Red, Green & White Twinkles",
@@ -351,7 +351,7 @@ const String twinklePaletteNames[twinklePaletteCount] = {
 	"Cloud 2 Twinkles",
 	"Ocean Twinkles",
 	"Rainbow Twinkles",
-	"Incandescent Twinkles"
+	"Retro C9 Twinkles"
 };
 
 void setTwinklePalette(uint8_t value)
