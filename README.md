@@ -22,26 +22,117 @@ It will work with any ESP8266 based controller.
 #### Custom irregular XY map generator based on Garrett Maces
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 
-#### ToDo
+## Patterns
+##### Fire -- 2D simulated fire with custom palettes
+* Settings
+  * Fire Palettes -- See Palettes section below
+  * Speed -- Adjusts the speed the heat travels upwards
+  * Cooling -- Adjusts the rate at which the heat cells cooling
+  * Sparking --  Adjusts the frequency of new embers
+---
+##### Pride -- Ever changing 2D interference patterns
+* Settings
+  * Speed -- Adjusts the rate of movement of the interference patterns
+---
+##### Fireworks -- 2D random fireworks
+* Settings
+  * Speed -- Adjusts the frequency of new fireworks
+---
+##### Rainbow -- Flowing rainbow over the height of the matrix
+---
+##### Rainbow w/ Glitter -- Flowing rainbow over the height of the matrix with sparkling glitter added
+---
+##### Solid Rainbow -- Slowly changing solid colors from a palette
+* Settings
+  * General Palettes -- See Palettes section below
+---
+##### Color Waves -- Flowing waves of color over the height of the matrix
+---
+##### Confetti -- Sparkling dots of light
+* Settings
+  * General Palettes -- See Palettes section below
+---
+##### Sinelon -- Sweeping bar of color with fading trails over height
+* Settings
+  * General Palettes -- See Palettes section below
+  * Speed -- Adjusts the speed the bar moves
+---
+##### Beat -- Colored stripes pulsing at a defined Beats-Per-Minute
+* Settings
+  * General Palettes -- See Palettes section below
+  * Speed -- Adjusts the speed the stripes moves
+---
+##### Juggle -- Several colored bars, weaving in and out of sync with each other
+* Settings
+  * Speed -- Adjusts the speed the bars move
+---
+##### TwinkleFOX -- Twinkling lights that randomly fade in and out from a palette
+* Settings
+  * Twinkle Palettes -- See Palettes section below
+  * Twinkle Speed -- Rate at which the twinkles fade in and out
+  * Twinkle Density -- Density of twinkles ranging from 0% to 100% coverage
+
+## Palettes
+* Fire Palettes
+    * Wood -- Orange
+    * Sodium -- Yellow
+    * Copper -- Green
+    * Alcohol -- Blue
+    * Rubidium -- Indigo
+    * Potassium -- Violet
+    * Lithium -- Red
+    * Rotating -- ↻
+---
+* General Palettes
+  * Rainbow -- Full spectrum
+  * Rainbow Stripe -- Full spectrum with black stripes
+  * Cloud -- Pale blues and whites
+  * Lava -- Dark reds and black
+  * Ocean -- Blues and greens
+  * Forest -- Greens and yellows
+  * Party -- Bright happy colors
+  * Heat -- Reds, yellows and whites
+---
+* TwinkleFOX Palettes
+  * Incandescent Twinkles
+  * Red & White Twinkles
+  * Blue & White Twinkles
+  * Red, Green & White Twinkles
+  * Fairy Light Twinkles
+  * Snow 2 Twinkles
+  * Holly Twinkles
+  * Ice Twinkles
+  * Party Twinkles
+  * Forest Twinkles
+  * Lava Twinkles
+  * Fire Twinkles
+  * Cloud 2 Twinkles
+  * Ocean Twinkles
+  * Rainbow Twinkles
+  * Retro C9 Twinkles
+
+Features
+--------
+* Turn LEDs on and off
+* Adjust the brightness
+* Change the display pattern
+* Adjust the color
+* Change color palettes
+* Adjust individual pattern parameters
+
+ToDo
+--------
 * Add button control for 5 button Dpad for CC4P
 * Add button control for 2 buttons on CC2
 * Add MSGEQ7 patterns for XY matrix
 * Add rain patterns
-* Add firewroks patterns
 * Add bleeding patterns
 * Add scrolling text
-
+* Prevent fireworks for shooting way off the top
 
 Hardware
 --------
 To be updated
-
-Features
---------
-* Turn the NeoPixel Ring on and off
-* Adjust the brightness
-* Change the display pattern
-* Adjust the color
 
 Web App
 --------
