@@ -144,7 +144,7 @@ uint8_t cooling = 72;
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
-uint8_t sparking = 128;
+uint8_t sparking = 84;
 
 uint8_t speed = 42;
 
@@ -249,12 +249,14 @@ typedef struct {
 typedef PatternAndName PatternAndNameList[];
 
 #include "TwinkleFOX.h"
+#include "FireWorks.h"
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 
 PatternAndNameList patterns = {
 	{ fire,				"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
 	{ pride,			"Pride -- Uses Speed" },
+	{ fireworks,			"Fireworks -- Uses Speed" },
 	{ rainbow,			"Rainbow" },
 	{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
 	{ rainbowSolid,			"Solid Rainbow -- Uses General Palettes" },
@@ -271,7 +273,6 @@ PatternAndNameList patterns = {
 };
 
 const uint8_t patternCount = ARRAY_SIZE(patterns);
-
 
 #include "Fields.h"
 
