@@ -130,8 +130,8 @@ int XY(int x, int y) {
 #define VOLTAGE		   4.2		//Set voltage used 4.2v for Lipo or 5v for 5V power supply or USB battery bank
 #define WIFI_MAX_POWER     1		//Set wifi output power between 0 and 20.5db (default around 19db)
 
-const uint8_t brightnessCount = 5;
-uint8_t brightnessMap[brightnessCount] = { 16, 32, 64, 128, 255 };
+const uint8_t brightnessCount = 6;
+uint8_t brightnessMap[brightnessCount] = { 16, 32, 64, 128, 192, 255 };
 uint8_t brightnessIndex = 4;
 
 // ten seconds per color palette makes a good demo
