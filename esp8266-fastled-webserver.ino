@@ -132,7 +132,7 @@ int XY(int x, int y) {
 
 const uint8_t brightnessCount = 5;
 uint8_t brightnessMap[brightnessCount] = { 16, 32, 64, 128, 255 };
-uint8_t brightnessIndex = 3;
+uint8_t brightnessIndex = 4;
 
 // ten seconds per color palette makes a good demo
 // 20-120 is better for deployment
@@ -981,8 +981,8 @@ void fire()
 
 void theMatrix()
 {
-	byte backgroundDots = 96;
-	byte spawnFreq = 48;
+	byte backgroundDots = 60;
+	byte spawnFreq = 20;
 	byte fadeRate = 60;
 
 	FastLED.delay(1000/map(speed,1,255,16,32));
@@ -991,12 +991,12 @@ void theMatrix()
 
 	fadeToBlackBy( leds, NUM_LEDS, fadeRate);
 
-	CRGBPalette16 theMatrix_p( CRGB::Black, CRGB::Black, CRGB::Green );
+	CRGBPalette16 theMatrix_p( CRGB::Black, CRGB::Green );
 
 	// Loop for each column individually
 	for (int x = 0; x < MATRIX_WIDTH; x++) {
 		// Step 1.  Move each dot down one cell
-		for (int i = 1; i < MATRIX_HEIGHT; i++) {
+		for (int i = 0; i < MATRIX_HEIGHT; i++) {
 			if (tempMatrix[x][i] >= backgroundDots) {	// Don't move empty cells
 				tempMatrix[x][i-1] = tempMatrix[x][i];
 				tempMatrix[x][i] = 0;
@@ -1005,7 +1005,7 @@ void theMatrix()
 
 		// Step 2.  Randomly spawn new dots at top
 		if (random(255) < spawnFreq) {
-			tempMatrix[x][MATRIX_HEIGHT-1] = random(backgroundDots, 255);
+			tempMatrix[x][MATRIX_HEIGHT-1] = random(backgroundDots, 200);
 		}
 
 		// Step 3. Map from tempMatrix cells to LED colors
