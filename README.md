@@ -41,6 +41,7 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 ##### The Matrix -- Green dots raining down from the top
 * Settings
   * Speed -- Adjusts the rate the dots move from top to bottom
+---
 ##### Rainbow -- Flowing rainbow over the height of the matrix
 ---
 ##### Rainbow w/ Glitter -- Flowing rainbow over the height of the matrix with sparkling glitter added
@@ -131,8 +132,6 @@ ToDo
 * Add rain patterns
 * Add bleeding patterns
 * Add scrolling text
-* Add matrix pattern
-* Prevent fireworks for shooting way off the top
 
 Hardware
 --------

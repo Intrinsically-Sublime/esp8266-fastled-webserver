@@ -198,18 +198,18 @@ public:
   
   void GroundLaunch()
   {
-    yv = 600 + random16(300 + (25 * MATRIX_HEIGHT));
-    xv = (int16_t)random16(600) - (int16_t)300;
+    yv = (MATRIX_HEIGHT * 40) + random16(MATRIX_HEIGHT * 10);	// Vertical velocity = Minimum velocity + Random maximum difference
+    xv = (int16_t)random16(600) - (int16_t)300;			// Horizontal velocity
     y = 0;
     x = 0x8000;
-    hsv2rgb_rainbow( CHSV( random8(), 240, 255), color);
+    hsv2rgb_rainbow( CHSV( random8(), 255, 255), color);	// Shell color at launch
     show = 1;
   }
   
   void Skyburst( accum88 basex, accum88 basey, saccum78 basedv, CRGB& basecolor)
   {
-    yv = (int16_t)0 + (int16_t)random16(1500) - (int16_t)500;
-    xv = basedv + (int16_t)random16(2000) - (int16_t)1000;
+    yv = (int16_t)0 + (int16_t)random16(1500) - (int16_t)500;	// Vertical velocity
+    xv = basedv + (int16_t)random16(2000) - (int16_t)1000;	// Horizontal velocity
     y = basey;
     x = basex;
     color = basecolor;
@@ -228,19 +228,8 @@ Dot gSparks[NUM_SPARKS];
 void fireworks() 
 { 
   random16_add_entropy( 65481 );
-  CRGB sky1(0,0,2);
-  CRGB sky2(2,0,2);
 
   memset8( leds, 0, NUM_LEDS * 3);
-
-#if 1
-   for( uint16_t v = 0; v < NUM_LEDS; v++) {
-     leds[v] = sky1;
-   }
-   for( byte u = 0; u < 1; u++) {
-    leds[random8(NUM_LEDS)] = sky2;
-  }
-#endif
   
   gDot.Move();
   gDot.Draw();
