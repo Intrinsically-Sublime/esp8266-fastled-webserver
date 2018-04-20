@@ -257,6 +257,7 @@ PatternAndNameList patterns = {
 	{ fire,				"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
 	{ pride,			"Pride -- Uses Speed" },
 	{ fireworks,			"Fireworks -- Uses Speed" },
+	{ theMatrix,			"The Matrix -- Uses Speed" },
 	{ rainbow,			"Rainbow" },
 	{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
 	{ rainbowSolid,			"Solid Rainbow -- Uses General Palettes" },
@@ -945,9 +946,6 @@ void fire()
 	// Add entropy to random number generator; we use a lot of it.
 	random16_add_entropy(random(256));
 
-	// Array of temperature readings at each simulation cell
-	static int_fast16_t heat[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
-
 	CRGBPalette16 fire_p( CRGB::Black);
 
 	if (currentFirePaletteIndex < firePaletteCount-1) {
@@ -960,23 +958,61 @@ void fire()
 	for (int x = 0; x < MATRIX_WIDTH; x++) {
 		// Step 1.  Cool down every cell a little
 		for (int i = 0; i < MATRIX_HEIGHT; i++) {
-			heat[x][i] = qsub8(heat[x][i], random(0, ((cooling * 10) / MATRIX_HEIGHT) + 2));
+			tempMatrix[x][i] = qsub8(tempMatrix[x][i], random(0, ((cooling * 10) / MATRIX_HEIGHT) + 2));
 		}
 
 		// Step 2.  Heat from each cell drifts 'up' and diffuses a little
 		for (int k = MATRIX_HEIGHT; k > 0; k--) {
-			heat[x][k] = (heat[x][k - 1] + heat[x][k - 2] + heat[x][k - 2]) / 3;
+			tempMatrix[x][k] = (tempMatrix[x][k - 1] + tempMatrix[x][k - 2] + tempMatrix[x][k - 2]) / 3;
 		}
 
 		// Step 3.  Randomly ignite new 'sparks' of heat near the bottom
 		if (random(255) < sparking) {
 			int j = random(FIRE_BASE);
-			heat[x][j] = qadd8(heat[x][j], random(160, 255));
+			tempMatrix[x][j] = qadd8(tempMatrix[x][j], random(160, 255));
 		}
 
 		// Step 4.  Map from heat cells to LED colors
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
-			leds[XY(x,y)] = ColorFromPalette(fire_p, scale8(heat[x][y], 255));
+			leds[XY(x,y)] = ColorFromPalette(fire_p, scale8(tempMatrix[x][y], 255));
+		}
+	}
+}
+
+void theMatrix()
+{
+	byte backgroundDots = 96;
+	byte spawnFreq = 48;
+	byte fadeRate = 60;
+
+	FastLED.delay(1000/map(speed,1,255,16,32));
+	// Add entropy to random number generator; we use a lot of it.
+	random16_add_entropy(random(256));
+
+	fadeToBlackBy( leds, NUM_LEDS, fadeRate);
+
+	CRGBPalette16 theMatrix_p( CRGB::Black, CRGB::Black, CRGB::Green );
+
+	// Loop for each column individually
+	for (int x = 0; x < MATRIX_WIDTH; x++) {
+		// Step 1.  Move each dot down one cell
+		for (int i = 1; i < MATRIX_HEIGHT; i++) {
+			if (tempMatrix[x][i] >= backgroundDots) {	// Don't move empty cells
+				tempMatrix[x][i-1] = tempMatrix[x][i];
+				tempMatrix[x][i] = 0;
+			}
+		}
+
+		// Step 2.  Randomly spawn new dots at top
+		if (random(255) < spawnFreq) {
+			tempMatrix[x][MATRIX_HEIGHT-1] = random(backgroundDots, 255);
+		}
+
+		// Step 3. Map from tempMatrix cells to LED colors
+		for (int y = 0; y < MATRIX_HEIGHT; y++) {
+			if (tempMatrix[x][y] >= backgroundDots) {	// Don't write out empty cells
+				leds[XY(x,y)] = ColorFromPalette(theMatrix_p, scale8(tempMatrix[x][y], 255));
+			}
 		}
 	}
 }

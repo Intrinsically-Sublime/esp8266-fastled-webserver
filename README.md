@@ -27,7 +27,7 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Settings
   * Fire Palettes -- See Palettes section below
   * Speed -- Adjusts the speed the heat travels upwards
-  * Cooling -- Adjusts the rate at which the heat cells cooling
+  * Cooling -- Adjusts the rate at which the heat cells cools
   * Sparking --  Adjusts the frequency of new embers
 ---
 ##### Pride -- Ever changing 2D interference patterns
@@ -38,6 +38,9 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Settings
   * Speed -- Adjusts the frequency of new fireworks
 ---
+##### The Matrix -- Green dots raining down from the top
+* Settings
+  * Speed -- Adjusts the rate the dots move from top to bottom
 ##### Rainbow -- Flowing rainbow over the height of the matrix
 ---
 ##### Rainbow w/ Glitter -- Flowing rainbow over the height of the matrix with sparkling glitter added
@@ -128,6 +131,7 @@ ToDo
 * Add rain patterns
 * Add bleeding patterns
 * Add scrolling text
+* Add matrix pattern
 * Prevent fireworks for shooting way off the top
 
 Hardware
