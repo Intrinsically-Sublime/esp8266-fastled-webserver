@@ -181,6 +181,7 @@ uint8_t currentTwinklePaletteIndex = 0;
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
 CRGB solidColor = CRGB::Blue;
+CRGB solidRainColor = CRGB(0,0,200);
 
 typedef struct {
   CRGBPalette16 palette;
@@ -255,6 +256,7 @@ typedef PatternAndName PatternAndNameList[];
 
 PatternAndNameList patterns = {
 	{ fire,				"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
+	{ coloredRain,			"Rain -- Uses Speed, Color Picker" },
 	{ pride,			"Pride -- Uses Speed" },
 	{ fireworks,			"Fireworks -- Uses Speed" },
 	{ theMatrix,			"The Matrix -- Uses Speed" },
@@ -270,7 +272,7 @@ PatternAndNameList patterns = {
 	// TwinkleFOX with palettes
 	{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Twinkle Speed & Density" },
 
-	{ showSolidColor,		"Solid Color" },
+	{ showSolidColor,		"Solid Color -- Uses Color Picker" }
 };
 
 const uint8_t patternCount = ARRAY_SIZE(patterns);
@@ -758,14 +760,17 @@ void setSolidColor(CRGB color)
 
 void setSolidColor(uint8_t r, uint8_t g, uint8_t b)
 {
-	solidColor = CRGB(r, g, b);
+	if(currentPatternIndex == 1) {
+		solidRainColor = CRGB(r, g, b);
+	} else {
+		solidColor = CRGB(r, g, b);
+		setPattern(patternCount - 1);
+	}
 
 	EEPROM.write(2, r);
 	EEPROM.write(3, g);
 	EEPROM.write(4, b);
 	EEPROM.commit();
-
-	setPattern(patternCount - 1);
 
 	broadcastString("color", String(solidColor.r) + "," + String(solidColor.g) + "," + String(solidColor.b));
 }
@@ -981,23 +986,32 @@ void fire()
 
 void theMatrix()
 {
-	byte backgroundDots = 60;
-	byte spawnFreq = 20;
-	byte fadeRate = 60;
+	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes )
+	rain(60, 200, 20, 195, CRGB::Green, false);
+}
+
+void coloredRain()
+{
+	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes )
+	rain(60, 180, 10, 10, solidRainColor, true);
+}
+
+void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes)
+{
 
 	FastLED.delay(1000/map(speed,1,255,16,32));
 	// Add entropy to random number generator; we use a lot of it.
 	random16_add_entropy(random(256));
 
-	fadeToBlackBy( leds, NUM_LEDS, fadeRate);
+	CRGBPalette16 rain_p( CRGB::Black, rainColor );
 
-	CRGBPalette16 theMatrix_p( CRGB::Black, CRGB::Green );
+	fadeToBlackBy( leds, NUM_LEDS, 255-tailLength);
 
 	// Loop for each column individually
 	for (int x = 0; x < MATRIX_WIDTH; x++) {
 		// Step 1.  Move each dot down one cell
 		for (int i = 0; i < MATRIX_HEIGHT; i++) {
-			if (tempMatrix[x][i] >= backgroundDots) {	// Don't move empty cells
+			if (tempMatrix[x][i] >= backgroundDepth) {	// Don't move empty cells
 				tempMatrix[x][i-1] = tempMatrix[x][i];
 				tempMatrix[x][i] = 0;
 			}
@@ -1005,13 +1019,33 @@ void theMatrix()
 
 		// Step 2.  Randomly spawn new dots at top
 		if (random(255) < spawnFreq) {
-			tempMatrix[x][MATRIX_HEIGHT-1] = random(backgroundDots, 200);
+			tempMatrix[x][MATRIX_HEIGHT-1] = random(backgroundDepth, maxBrightness);
 		}
 
 		// Step 3. Map from tempMatrix cells to LED colors
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
-			if (tempMatrix[x][y] >= backgroundDots) {	// Don't write out empty cells
-				leds[XY(x,y)] = ColorFromPalette(theMatrix_p, scale8(tempMatrix[x][y], 255));
+			if (tempMatrix[x][y] >= backgroundDepth) {	// Don't write out empty cells
+				leds[XY(x,y)] = ColorFromPalette(rain_p, tempMatrix[x][y]);
+			}
+		}
+
+		// Step 4. Add splash if called for
+		if (splashes) {
+			static uint_fast16_t splashArray[MATRIX_WIDTH];
+
+			byte j = splashArray[x];
+			byte v = tempMatrix[x][0];
+
+			if (j >= backgroundDepth) {
+				leds[XY(x-2,0)] = ColorFromPalette(rain_p, j/3);
+				leds[XY(x+2,0)] = ColorFromPalette(rain_p, j/3);
+				splashArray[x] = 0; 	// Reset splash
+			}
+
+			if (v >= backgroundDepth) {
+				leds[XY(x-1,1)] = ColorFromPalette(rain_p, v/2);
+				leds[XY(x+1,1)] = ColorFromPalette(rain_p, v/2);
+				splashArray[x] = v;	// Prep splash for next frame
 			}
 		}
 	}

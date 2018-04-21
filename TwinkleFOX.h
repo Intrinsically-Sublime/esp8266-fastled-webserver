@@ -314,6 +314,8 @@ const TProgmemRGBPalette16 Incandescent_p FL_PROGMEM =
 	Incandescent_White, Incandescent_White, Incandescent_White, Incandescent_White
 };
 
+uint8_t currentTwinklePaletteIndex = 0;
+
 const CRGBPalette16 twinklePalettes[] = {
 	Incandescent_p,
 	RedWhite_p,

@@ -23,18 +23,23 @@ It will work with any ESP8266 based controller.
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 
 ## Patterns
-##### Fire -- 2D simulated fire with custom palettes
+##### Fire -- Simulated fire with custom palettes
 * Settings
   * Fire Palettes -- See Palettes section below
   * Speed -- Adjusts the speed the heat travels upwards
   * Cooling -- Adjusts the rate at which the heat cells cools
   * Sparking --  Adjusts the frequency of new embers
 ---
+##### Rain -- Colored rain falling down from the top and splashing at the bottom
+* Settings
+  * Speed -- Adjusts the rate of rainfall
+  * Color Picker -- Sets the color of the rain
+---
 ##### Pride -- Ever changing 2D interference patterns
 * Settings
   * Speed -- Adjusts the rate of movement of the interference patterns
 ---
-##### Fireworks -- 2D random fireworks
+##### Fireworks -- Random fireworks on 2D matrix
 * Settings
   * Speed -- Adjusts the frequency of new fireworks
 ---
@@ -75,6 +80,10 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
   * Twinkle Palettes -- See Palettes section below
   * Twinkle Speed -- Rate at which the twinkles fade in and out
   * Twinkle Density -- Density of twinkles ranging from 0% to 100% coverage
+---
+##### Solid Color -- Fill all LEDs with the smae color
+* Settings
+  * Color Picker -- Sets the color
 
 ## Palettes
 * Fire Palettes
@@ -129,9 +138,10 @@ ToDo
 * Add button control for 5 button Dpad for CC4P
 * Add button control for 2 buttons on CC2
 * Add MSGEQ7 patterns for XY matrix
-* Add rain patterns
+* Add stormy rain pattern
 * Add bleeding patterns
 * Add scrolling text
+* Add intensity slider
 
 Hardware
 --------
