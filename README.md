@@ -17,7 +17,9 @@ It will work with any ESP8266 based controller.
 10) Remove need for Glyphs, Icons and Fonts by using HTML entities in their place. It now fits on an ESP-01 properly.
 11) Removed unused functions to cleanup code.
 12) Made all patterns capable of addressing more than 256 LEDs.
-13) Rotate palettes every time through patterns in autoplay mode.
+13) Rotate palettes after each time through all patterns in autoplay mode.
+14) Add Cylindrical option to wrap certain patterns around at the ends (Fireworks, Storm).
+14) Add blending to fire to smooth the animation.
 
 #### Custom irregular XY map generator based on Garrett Maces
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
@@ -30,7 +32,16 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
   * Cooling -- Adjusts the rate at which the heat cells cools
   * Sparking --  Adjusts the frequency of new embers
 ---
+##### Fireworks -- Random fireworks on 2D matrix
+* Settings
+  * Speed -- Adjusts the velocity of the shells and the gravity pulling down the sparks
+---
 ##### Rain -- Colored rain falling down from the top and splashing at the bottom
+* Settings
+  * Speed -- Adjusts the rate of rainfall
+  * Color Picker -- Sets the color of the rain
+---
+##### Storm -- Colored rain falling down from clouds at the top and splashing at the bottom with peridodical lightning bolts
 * Settings
   * Speed -- Adjusts the rate of rainfall
   * Color Picker -- Sets the color of the rain
@@ -38,10 +49,6 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 ##### Pride -- Ever changing 2D interference patterns
 * Settings
   * Speed -- Adjusts the rate of movement of the interference patterns
----
-##### Fireworks -- Random fireworks on 2D matrix
-* Settings
-  * Speed -- Adjusts the frequency of new fireworks
 ---
 ##### The Matrix -- Green dots raining down from the top
 * Settings
@@ -138,10 +145,11 @@ ToDo
 * Add button control for 5 button Dpad for CC4P
 * Add button control for 2 buttons on CC2
 * Add MSGEQ7 patterns for XY matrix
-* Add stormy rain pattern
 * Add bleeding patterns
-* Add scrolling text
-* Add intensity slider
+* Add scrolling text with input via web interface
+* Add intensity slider (Fireworks size/count, Rain strength)
+* Hide patterns based on Matrix size (Greater than 4x4 for Fireworks, Rain, Storm. Greater than 5x5 for scrolling text)
+* Save settings in array to allow each pattern to have their own settings
 
 Hardware
 --------

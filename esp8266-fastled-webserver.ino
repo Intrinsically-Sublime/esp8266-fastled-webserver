@@ -86,13 +86,31 @@ char* password = "";
 //#define SERPENTINE			// Uncomment for ZigZag/Serpentine wiring (Not used with irregular matrix)
 //#define MIRROR_WIDTH			// Mirrors the output horizontally (Not used with irregular matrix)
 #define MIRROR_HEIGHT			// Mirrors the output vertically (Not used with irregular matrix)
+#define CYLINDRICAL_MATRIX		// Uncomment if your matrix wraps around in a cylinder
 
 #define NUM_LEDS	MATRIX_WIDTH*MATRIX_HEIGHT	// Should be equal to visible LEDs
 
 CRGB leds[NUM_LEDS+1];	// One extra pixel for hiding out of bounds data
 
-int XY(int x, int y) {
-	// x = Width, y = Height
+int wrapX(int x) {	// Used by XY function and tempMatrix buffer
+	#ifdef CYLINDRICAL_MATRIX
+		if (x >= MATRIX_WIDTH) {
+			return x - MATRIX_WIDTH;
+		} else if (x < 0) {
+			return MATRIX_WIDTH - abs(x);
+		} else {
+			return x;
+		}
+	#else
+		return x;
+	#endif
+}
+
+int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
+
+	// Wrap X around for use on cylinders
+	if (wrap) { x = wrapX(x); }
+
 	// map anything outside of the matrix to the extra hidden pixel
 	if (y >= MATRIX_HEIGHT || x >= MATRIX_WIDTH) { return NUM_LEDS; }
 
@@ -104,13 +122,13 @@ int XY(int x, int y) {
 	#endif	
 
 	#ifdef SERPENTINE
-	if(x%2 == 0) {
-		return (x * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - y);
-	} else {
-		return (x * MATRIX_HEIGHT) + y;
-	}
+		if(x%2 == 0) {
+			return (x * MATRIX_HEIGHT) + y;
+		} else {
+			return (x * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - y);
+		}
 	#else
-	return (x * MATRIX_HEIGHT) + y;
+		return (x * MATRIX_HEIGHT) + y;
 	#endif
 }
 
@@ -130,6 +148,14 @@ int XY(int x, int y) {
 #define VOLTAGE		   4.2		//Set voltage used 4.2v for Lipo or 5v for 5V power supply or USB battery bank
 #define WIFI_MAX_POWER     1		//Set wifi output power between 0 and 20.5db (default around 19db)
 
+// The 32bit version of our coordinates
+static uint16_t noiseX;
+static uint16_t noiseY;
+static uint16_t noiseZ;
+
+// Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
+uint_fast16_t tempMatrix[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
+
 const uint8_t brightnessCount = 6;
 uint8_t brightnessMap[brightnessCount] = { 16, 32, 64, 128, 192, 255 };
 uint8_t brightnessIndex = 4;
@@ -146,6 +172,10 @@ uint8_t cooling = 72;
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 uint8_t sparking = 84;
 
+// SMOOTHING; How much blending should be done between frames
+// Lower = more blending and smoother flames. Higher = less blending and flickery flames
+uint8_t fireSmoothing = 220;
+
 uint8_t speed = 42;
 
 ///////////////////////////////////////////////////////////////////////
@@ -159,8 +189,8 @@ uint8_t gCurrentPaletteNumber = 0;
 CRGBPalette16 gCurrentPalette( CRGB::Black);
 CRGBPalette16 gTargetPalette( gGradientPalettes[0] );
 
-CRGBPalette16 WoodFireColors_p = CRGBPalette16(CRGB::Black, CRGB::OrangeRed, CRGB::Gold, CRGB::Yellow);			//* Orange
-CRGBPalette16 SodiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod);		//* Yellow
+CRGBPalette16 WoodFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Yellow);			//* Orange
+CRGBPalette16 SodiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Yellow, CRGB::Gold, CRGB::Goldenrod);		//* Yellow
 CRGBPalette16 CopperFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen);		//* Green
 CRGBPalette16 AlcoholFireColors_p = CRGBPalette16(CRGB::Black, CRGB::DarkBlue, CRGB::LightBlue, CRGB::MediumBlue);	//* Blue
 CRGBPalette16 RubidiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue);		//* Indigo
@@ -226,7 +256,7 @@ const CRGBPalette16 firePalettes[] = {
 	RotatingFire_p
 };
 
-CRGBPalette16 TargetFire_p( firePalettes[0] );
+CRGBPalette16 TargetFire_p(SodiumFireColors_p);
 
 const uint8_t firePaletteCount = ARRAY_SIZE(firePalettes);
 
@@ -250,15 +280,17 @@ typedef struct {
 typedef PatternAndName PatternAndNameList[];
 
 #include "TwinkleFOX.h"
-#include "FireWorks.h"
+//#include "FireWorks.h"  		// Fireworks or Fireworks2
+#include "FireWorks2.h" 		// Fireworks or Fireworks2
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 
 PatternAndNameList patterns = {
 	{ fire,				"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
-	{ coloredRain,			"Rain -- Uses Speed, Color Picker" },
-	{ pride,			"Pride -- Uses Speed" },
 	{ fireworks,			"Fireworks -- Uses Speed" },
+	{ coloredRain,			"Rain -- Uses Speed, Color Picker" },
+	{ stormyRain,			"Storm -- Uses Speed, Color Picker" },
+	{ pride,			"Pride -- Uses Speed" },
 	{ theMatrix,			"The Matrix -- Uses Speed" },
 	{ rainbow,			"Rainbow" },
 	{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
@@ -280,6 +312,7 @@ const uint8_t patternCount = ARRAY_SIZE(patterns);
 #include "Fields.h"
 
 void setup() {
+	delay(2000);
 	#ifdef SERIAL_OUTPUT
 	Serial.begin(115200);
 	delay(100);
@@ -344,6 +377,11 @@ void setup() {
 	setupWebserver();
 
 	autoPlayTimeout = millis() + (autoplayDuration * 1000);
+
+	// Initialize noise coordinates to some random values
+	noiseX = random16();
+	noiseY = random16();
+	noiseZ = random16();
 }
 
 void setupWiFi()
@@ -947,7 +985,7 @@ void confetti()
 // based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
 void fire()
 {
-	FastLED.delay(1000/map(speed,1,255,30,110));
+	FastLED.delay(1000/map8(speed,30,110));
 	// Add entropy to random number generator; we use a lot of it.
 	random16_add_entropy(random(256));
 
@@ -979,31 +1017,38 @@ void fire()
 
 		// Step 4.  Map from heat cells to LED colors
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
-			leds[XY(x,y)] = ColorFromPalette(fire_p, scale8(tempMatrix[x][y], 255));
+			// Blend new data with previous frame. Average data between neighbouring pixels
+			nblend(leds[XY(x,y)], ColorFromPalette(fire_p, tempMatrix[x][y] + tempMatrix[wrapX(x+1)][y] / 2), fireSmoothing);
 		}
 	}
 }
 
 void theMatrix()
 {
-	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes )
-	rain(60, 200, 20, 195, CRGB::Green, false);
+	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds )
+	rain(60, 200, 20, 195, CRGB::Green, false, false, false);
 }
 
 void coloredRain()
 {
-	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes )
-	rain(60, 180, 10, 10, solidRainColor, true);
+	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds )
+	rain(60, 180, 10, 10, solidRainColor, true, false, false);
 }
 
-void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes)
+void stormyRain()
 {
+	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds )
+	rain(0, 90, 90, 10, solidRainColor, true, true, true);
+}
 
-	FastLED.delay(1000/map(speed,1,255,16,32));
+void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm)
+{
+	FastLED.delay(1000/map8(speed,16,32));
 	// Add entropy to random number generator; we use a lot of it.
-	random16_add_entropy(random(256));
 
+	CRGB lightningColor = CRGB(72,72,80);
 	CRGBPalette16 rain_p( CRGB::Black, rainColor );
+	CRGBPalette16 rainClouds_p( CRGB::Black, CRGB(15,24,24), CRGB(9,15,15), CRGB::Black );
 
 	fadeToBlackBy( leds, NUM_LEDS, 255-tailLength);
 
@@ -1037,16 +1082,72 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
 			byte v = tempMatrix[x][0];
 
 			if (j >= backgroundDepth) {
-				leds[XY(x-2,0)] = ColorFromPalette(rain_p, j/3);
-				leds[XY(x+2,0)] = ColorFromPalette(rain_p, j/3);
+				leds[XY(x-2,0,true)] = ColorFromPalette(rain_p, j/3);
+				leds[XY(x+2,0,true)] = ColorFromPalette(rain_p, j/3);
 				splashArray[x] = 0; 	// Reset splash
 			}
 
 			if (v >= backgroundDepth) {
-				leds[XY(x-1,1)] = ColorFromPalette(rain_p, v/2);
-				leds[XY(x+1,1)] = ColorFromPalette(rain_p, v/2);
+				leds[XY(x-1,1,true)] = ColorFromPalette(rain_p, v/2);
+				leds[XY(x+1,1,true)] = ColorFromPalette(rain_p, v/2);
 				splashArray[x] = v;	// Prep splash for next frame
 			}
+		}
+
+		// Step 5. Add lightning if called for
+		if (storm) {
+			int lightning[MATRIX_WIDTH][MATRIX_HEIGHT];
+
+			if (random16() < 72) {		// Odds of a lightning bolt
+				lightning[scale8(random8(), MATRIX_WIDTH)][MATRIX_HEIGHT-1] = 255;	// Random starting location
+				for(int ly = MATRIX_HEIGHT-1; ly > 0; ly--) {
+					for (int lx = 0; lx < MATRIX_WIDTH; lx++) {
+						if (lightning[lx][ly] == 255) {
+							lightning[lx][ly] = 0;
+							uint8_t dir = random8(4);
+							switch (dir) {
+								case 0:
+									leds[XY(lx+1,ly-1,true)] = lightningColor;
+									lightning[wrapX(lx+1)][ly-1] = 255;	// move down and right
+								break;
+								case 1:
+									leds[XY(lx,ly-1,true)] = CRGB(128,128,128);
+									lightning[lx][ly-1] = 255;		// move down
+								break;
+								case 2:
+									leds[XY(lx-1,ly-1,true)] = CRGB(128,128,128);
+									lightning[wrapX(lx-1)][ly-1] = 255;	// move down and left
+								break;
+								case 3:
+									leds[XY(lx-1,ly-1,true)] = CRGB(128,128,128);
+									lightning[wrapX(lx-1)][ly-1] = 255;	// fork down and left
+									leds[XY(lx-1,ly-1,true)] = CRGB(128,128,128);
+									lightning[wrapX(lx+1)][ly-1] = 255;	// fork down and right
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Step 6. Add clouds if called for
+		if (clouds) {
+			uint16_t noiseScale = 250;	// A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
+			const uint8_t cloudHeight = MATRIX_HEIGHT/4;
+			// This is the array that we keep our computed noise values in
+			static uint8_t noise[MATRIX_WIDTH][cloudHeight];
+			int xoffset = noiseScale * x + gHue;
+
+			for(int z = 0; z < cloudHeight; z++) {
+				int yoffset = noiseScale * z - gHue;
+				uint8_t dataSmoothing = 192;
+				uint8_t noiseData = qsub8(inoise8(noiseX + xoffset,noiseY + yoffset,noiseZ),16);
+				noiseData = qadd8(noiseData,scale8(noiseData,39));
+				noise[x][z] = scale8( noise[x][z], dataSmoothing) + scale8( noiseData, 256 - dataSmoothing);
+				nblend(leds[XY(x,MATRIX_HEIGHT-z-1)], ColorFromPalette(rainClouds_p, noise[x][z]), (cloudHeight-z)*(250/cloudHeight));
+			}
+			noiseZ ++;
 		}
 	}
 }
@@ -1061,7 +1162,7 @@ void addGlitter( uint8_t chanceOfGlitter)
 void bpm()
 {
 	// colored stripes pulsing at a defined Beats-Per-Minute (BPM)
-	uint8_t beat = beatsin8(map(speed,1,255,30,150), 64, 255);
+	uint8_t beat = beatsin8(map8(speed,30,150), 64, 255);
 	CRGBPalette16 palette = palettes[currentPaletteIndex];
 	for ( int r = 0; r < MATRIX_HEIGHT; r++) {
 		for (int i = 0; i < MATRIX_WIDTH; i++) {
@@ -1086,7 +1187,7 @@ void juggle()
 	static uint8_t thisbright = 255; // How bright should the LED/display be.
 	static uint8_t   basebeat =   5; // Higher = faster movement.
 
-	basebeat = map(speed,1,255,5,30);
+	basebeat = map8(speed,5,30);
 
 	static uint8_t lastSecond =  99;  // Static variable, means it's only defined once. This is our 'debounce' variable.
 	uint8_t secondHand = (millis() / 1000) % 30; // IMPORTANT!!! Change '30' to a different value to change duration of the loop.
@@ -1253,7 +1354,7 @@ void sinelon()
 {
 	// a colored dot sweeping back and forth, with fading trails
 	fadeToBlackBy( leds, NUM_LEDS, 20);
-	int pos = beatsin16(map(speed,1,255,30,150), 0, MATRIX_HEIGHT - 1);
+	int pos = beatsin16(map8(speed,30,150), 0, MATRIX_HEIGHT - 1);
 	static int prevpos = 0;
 	CRGB color = ColorFromPalette(palettes[currentPaletteIndex], gHue, 255);
 
