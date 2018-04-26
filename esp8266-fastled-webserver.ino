@@ -206,7 +206,6 @@ unsigned long autoPlayTimeout = 0;
 uint8_t currentPaletteIndex = 0;
 uint8_t currentFirePaletteIndex = 0;
 uint8_t rotatingFirePaletteIndex = 0;
-uint8_t currentTwinklePaletteIndex = 0;
 
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
