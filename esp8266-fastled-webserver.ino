@@ -210,7 +210,7 @@ uint8_t rotatingFirePaletteIndex = 0;
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
 CRGB solidColor = CRGB::Blue;
-CRGB solidRainColor = CRGB(0,0,200);
+CRGB solidRainColor = CRGB(60,80,90);
 
 typedef struct {
   CRGBPalette16 palette;
@@ -797,7 +797,7 @@ void setSolidColor(CRGB color)
 
 void setSolidColor(uint8_t r, uint8_t g, uint8_t b)
 {
-	if(currentPatternIndex == 1) {
+	if(currentPatternIndex == 2 || currentPatternIndex == 3) {
 		solidRainColor = CRGB(r, g, b);
 	} else {
 		solidColor = CRGB(r, g, b);
