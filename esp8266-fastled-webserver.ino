@@ -39,6 +39,7 @@ extern "C" {
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
+// True = Access point mode (direct connection to ESP8266), False = Station mode (connects to existing network)
 const bool apMode = true;
 
 //#define SERIAL_OUTPUT			// Uncomment to enable serial output. Useful for debugging
@@ -60,33 +61,40 @@ char* password = "";
 #define				CC4P
 //#define			CC2
 
-//#define DEVICE_NAME 	"Test"
+#define DEVICE_NAME 		"Test"
 //#define REVERSE_ORDER			// Uncomment to have the patterns run in reverse direction (for a limited number of patterns)
 
+// CC2 Specific Settings
 #ifdef CC2
-#define DATA_PIN		1
+#define DATA_PIN_A		1
 #define LED_TYPE		WS2812B
 #define COLOR_ORDER		GRB
+
+// Second output settings. Leave commented unless you are using it.
+//#define DATA_PIN_B		3	// Uncomment to use the second output. NOT PARALLEL OUTPUT
+#define NUM_LEDS_STRIP_A	50	// Only used if DATA_PIN_B is defined
+#define NUM_LEDS_STRIP_B	50	// Only used if DATA_PIN_B is defined
 #endif
 
+// CC4P Specific Settings
 #ifdef CC4P
-//Parallel Output definitions
-#define PARALLEL_OUTPUT			// Uncommented = Parallel output on WS2813_PORTA. Commented = Sequential output on pins 12,13,14,15
+#define PARALLEL_OUTPUT		// Uncommented = Parallel output on WS2813_PORTA. Commented = Sequential output on pins 12,13,14,15
 #define NUM_LEDS_PER_STRIP	150
 #define NUM_STRIPS		4
 #endif
 
 ///////////////////// All animation functions mapped through XY(x,y) function. ///////////////////////////
-////////////////////  This currently only works with square vertical matrices. ///////////////////////////
-////////////////// Replace with custom XY map for irregular or horizontal Matrix. ////////////////////////
+///////////////////////// Replace with custom XY map for irregular Matrix. ///////////////////////////////
 /// To generate irregular Matrix see https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/ ///
 
-#define MATRIX_WIDTH		24	// Column count ( widest horizontal width for irregular matrix )
-#define MATRIX_HEIGHT		25	// Row count ( tallest vertical height for irregular matrix )
+//#define MATRIX_WIDTH		24	// Column count ( widest horizontal width for irregular matrix )
+//#define MATRIX_HEIGHT		25	// Row count ( tallest vertical height for irregular matrix )
+//#define CYLINDRICAL_MATRIX		// Uncomment if your matrix wraps around in a cylinder
+
 //#define SERPENTINE			// Uncomment for ZigZag/Serpentine wiring (Not used with irregular matrix)
+//#define HORIZONTAL			// Uncomment for Horizontal wiring (Not used with irregular matrix)
 //#define MIRROR_WIDTH			// Mirrors the output horizontally (Not used with irregular matrix)
-#define MIRROR_HEIGHT			// Mirrors the output vertically (Not used with irregular matrix)
-#define CYLINDRICAL_MATRIX		// Uncomment if your matrix wraps around in a cylinder
+//#define MIRROR_HEIGHT			// Mirrors the output vertically (Not used with irregular matrix)
 
 #define NUM_LEDS	MATRIX_WIDTH*MATRIX_HEIGHT	// Should be equal to visible LEDs
 
@@ -115,20 +123,30 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 	if (y >= MATRIX_HEIGHT || x >= MATRIX_WIDTH) { return NUM_LEDS; }
 
 	#ifdef MIRROR_WIDTH
-		x = (MATRIX_WIDTH - 1) - x;
+	x = (MATRIX_WIDTH - 1) - x;
 	#endif
+
 	#ifdef MIRROR_HEIGHT
-		y = (MATRIX_HEIGHT - 1) - y;
-	#endif	
+	y = (MATRIX_HEIGHT - 1) - y;
+	#endif
+
+	#ifdef HORIZONTAL
+	int xx = x;
+	x = y;
+	y = xx;
+	#define XorY MATRIX_WIDTH
+	#else
+	#define XorY MATRIX_HEIGHT
+	#endif
 
 	#ifdef SERPENTINE
-		if(x%2 == 0) {
-			return (x * MATRIX_HEIGHT) + y;
-		} else {
-			return (x * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - y);
-		}
+	if(x%2 == 0) {
+		return (x * XorY) + y;
+	} else {
+		return (x * XorY) + ((XorY - 1) - y);
+	}
 	#else
-		return (x * MATRIX_HEIGHT) + y;
+	return (x * XorY) + y;
 	#endif
 }
 
@@ -137,10 +155,10 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 
 #define MATRIX_TOTAL	MATRIX_WIDTH*MATRIX_HEIGHT	// Total size of the LED matrix including any hidden pixels
 
-#if MATRIX_HEIGHT/5 < 7
-	#define FIRE_BASE	MATRIX_HEIGHT/5+1
+#if MATRIX_HEIGHT/6 > 6
+	#define FIRE_BASE	6
 #else
-	#define FIRE_BASE	7
+	#define FIRE_BASE	MATRIX_HEIGHT/6+1
 #endif
 
 // For best battery life MILLI_AMPS = NUM_LEDS * 3 (gives poor white) Better white MILLI_AMPS = NUM_LEDS * 9 (poor battery life)
@@ -282,8 +300,10 @@ typedef PatternAndName PatternAndNameList[];
 //#include "FireWorks.h"  		// Fireworks or Fireworks2
 #include "FireWorks2.h" 		// Fireworks or Fireworks2
 
-// List of patterns to cycle through.  Each is defined as a separate function below.
+#define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
+#define TWINKLE_POSITION 14	// Used to keep track of where twinkle is in the pattern list
 
+// List of patterns to cycle through.  Each is defined as a separate function below.
 PatternAndNameList patterns = {
 	{ fire,				"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
 	{ fireworks,			"Fireworks -- Uses Speed" },
@@ -292,7 +312,7 @@ PatternAndNameList patterns = {
 	{ pride,			"Pride -- Uses Speed" },
 	{ theMatrix,			"The Matrix -- Uses Speed" },
 	{ rainbow,			"Rainbow" },
-	{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
+	{ rainbowWithGlitter,		"Rainbow w/Glitter" },
 	{ rainbowSolid,			"Solid Rainbow -- Uses General Palettes" },
 	{ colorWaves,			"Color Waves" },
 	{ confetti,			"Confetti -- Uses General Palettes" },
@@ -309,6 +329,7 @@ PatternAndNameList patterns = {
 const uint8_t patternCount = ARRAY_SIZE(patterns);
 
 #include "Fields.h"
+#include "Buttons.h"
 
 void setup() {
 	delay(2000);
@@ -330,7 +351,12 @@ void setup() {
 	#endif
 
 	#ifdef CC2
-	FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+	#ifdef DATA_PIN_B
+	FastLED.addLeds<LED_TYPE, DATA_PIN_A, COLOR_ORDER>(leds, 0, NUM_LEDS_STRIP_A);
+	FastLED.addLeds<LED_TYPE, DATA_PIN_B, COLOR_ORDER>(leds, NUM_LEDS_STRIP_A, NUM_LEDS_STRIP_B);
+	#else		
+	FastLED.addLeds<LED_TYPE, DATA_PIN_A, COLOR_ORDER>(leds, NUM_LEDS);
+	#endif
 	#endif
 
 	FastLED.setDither(true);
@@ -375,6 +401,8 @@ void setup() {
 
 	setupWebserver();
 
+	setupButtons();
+
 	autoPlayTimeout = millis() + (autoplayDuration * 1000);
 
 	// Initialize noise coordinates to some random values
@@ -383,7 +411,7 @@ void setup() {
 	noiseZ = random16();
 }
 
-void setupWiFi()
+void setupWiFi() 
 {
 	//Set wifi output power between 0 and 20.5db (default around 19db)
 	WiFi.setOutputPower(WIFI_MAX_POWER);
@@ -632,14 +660,16 @@ void broadcastString(String name, String value)
 }
 
 void loop() {
-// Add entropy to random number generator; we use a lot of it.
-	random16_add_entropy(random(65535));
+	random16_add_entropy(analogRead(random8()));
 
-//  dnsServer.processNextRequest();
+//	dnsServer.processNextRequest();
 	webSocketsServer.loop();
 	webServer.handleClient();
 
-//  handleIrInput();
+	// Read Buttons
+	EVERY_N_MILLISECONDS(BUTTON_CHECK_INTERVAL) {
+		readButtons();
+	}
 
 	if (power == 0) {
 		fill_solid(leds, NUM_LEDS, CRGB::Black);
@@ -652,7 +682,7 @@ void loop() {
 //	   Serial.print( F("Heap: ") ); Serial.println(system_get_free_heap_size());
 //	 }
 
-// change to a new cpt-city gradient palette
+	// change to a new cpt-city gradient palette
 	EVERY_N_SECONDS( secondsPerPalette ) {
 		gCurrentPaletteNumber = addmod8( gCurrentPaletteNumber, 1, gGradientPaletteCount);
 		gTargetPalette = gGradientPalettes[ gCurrentPaletteNumber ];
@@ -673,7 +703,7 @@ void loop() {
 
 	if (autoplay && (millis() > autoPlayTimeout)) {
 		adjustPattern(true);
-		rotatePalettes();
+		autoRotatePalettes();
 		autoPlayTimeout = millis() + (autoplayDuration * 1000);
 	}
 
@@ -683,8 +713,8 @@ void loop() {
 	FastLED.show();
 }
 
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length)
-{
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+
 	#ifdef SERIAL_OUTPUT
 	switch (type) {
 		case WStype_DISCONNECTED:
@@ -719,7 +749,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 			// webSocketsServer.sendBIN(num, payload, lenght);
 			break;
 	}
-	#endif
+#endif
 }
 
 void loadSettings()
@@ -838,16 +868,43 @@ void adjustPattern(bool up)
 }
 
 // change color palettes once each time through patterns when in autoplay mode
-void rotatePalettes()
+void autoRotatePalettes()
 {
 	if (currentPatternIndex == 0) {
 		currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
 		currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
 		currentTwinklePaletteIndex = (currentTwinklePaletteIndex+1)%twinklePaletteCount;
+
+		broadcastInt("twinklePalette", currentTwinklePaletteIndex);
+		broadcastInt("firePalette", currentFirePaletteIndex);
+		broadcastInt("palette", currentPaletteIndex);
 	}
-	broadcastInt("twinklePalette", currentTwinklePaletteIndex);
-	broadcastInt("firePalette", currentFirePaletteIndex);
-	broadcastInt("palette", currentPaletteIndex);
+}
+
+void rotatePalette(bool up)
+{
+	if (currentPaletteIndex == FIRE_POSITION) {
+		if(up) {
+			currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
+		} else {
+			currentFirePaletteIndex = (currentFirePaletteIndex+(firePaletteCount-1))%firePaletteCount;
+		}
+		broadcastInt("firePalette", currentFirePaletteIndex);
+	} else if (currentPaletteIndex == TWINKLE_POSITION) {
+		if(up) {
+			currentTwinklePaletteIndex = (currentTwinklePaletteIndex+1)%twinklePaletteCount;
+		} else {
+			currentTwinklePaletteIndex = (currentTwinklePaletteIndex+(firePaletteCount-1))%twinklePaletteCount;
+		}
+		broadcastInt("twinklePalette", currentTwinklePaletteIndex);
+	} else {
+		if(up) {
+			currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
+		} else {
+			currentPaletteIndex = (currentPaletteIndex+(firePaletteCount-1))%paletteCount;
+		}
+		broadcastInt("palette", currentPaletteIndex);
+	}
 }
 
 void setPattern(uint8_t value)
@@ -1165,7 +1222,6 @@ void bpm()
 	CRGBPalette16 palette = palettes[currentPaletteIndex];
 	for ( int r = 0; r < MATRIX_HEIGHT; r++) {
 		for (int i = 0; i < MATRIX_WIDTH; i++) {
-//			leds[r+(i*MATRIX_HEIGHT)] = ColorFromPalette(palette, gHue + (r * 2), beat - gHue + (r * 10));
 			#ifdef REVERSE_ORDER
 			leds[XY(i,MATRIX_HEIGHT-1-r)] = ColorFromPalette(palette, gHue + (r * 2), beat - gHue + (r * 10));
 			#else
@@ -1372,93 +1428,3 @@ void sinelon()
 }
 
 //////////////////////////////// End Animation Functions /////////////////////////////////////////////////
-
-//////////////////////////////// Unused IR Functions /////////////////////////////////////////////////////
-
-//void handleIrInput()
-//{
-//  InputCommand command = readCommand();
-//
-//  if (command != InputCommand::None) {
-//    Serial.print("command: ");
-//    Serial.println((int) command);
-//  }
-//
-//  switch (command) {
-//    case InputCommand::Up: {
-//        adjustPattern(true);
-//        break;
-//      }
-//    case InputCommand::Down: {
-//        adjustPattern(false);
-//        break;
-//      }
-//    case InputCommand::Power: {
-//        setPower(power == 0 ? 1 : 0);
-//        break;
-//      }
-//    case InputCommand::BrightnessUp: {
-//        adjustBrightness(true);
-//        break;
-//      }
-//    case InputCommand::BrightnessDown: {
-//        adjustBrightness(false);
-//        break;
-//      }
-//    case InputCommand::PlayMode: { // toggle pause/play
-//        setAutoplay(!autoplay);
-//        break;
-//      }
-//
-//    // pattern buttons
-//
-//    case InputCommand::Pattern1: {
-//        setPattern(0);
-//        break;
-//      }
-//    case InputCommand::Pattern2: {
-//        setPattern(1);
-//        break;
-//      }
-//    case InputCommand::Pattern3: {
-//        setPattern(2);
-//        break;
-//      }
-//    case InputCommand::Pattern4: {
-//        setPattern(3);
-//        break;
-//      }
-//    case InputCommand::Pattern5: {
-//        setPattern(4);
-//        break;
-//      }
-//    case InputCommand::Pattern6: {
-//        setPattern(5);
-//        break;
-//      }
-//    case InputCommand::Pattern7: {
-//        setPattern(6);
-//        break;
-//      }
-//    case InputCommand::Pattern8: {
-//        setPattern(7);
-//        break;
-//      }
-//    case InputCommand::Pattern9: {
-//        setPattern(8);
-//        break;
-//      }
-//    case InputCommand::Pattern10: {
-//        setPattern(9);
-//        break;
-//      }
-//    case InputCommand::Pattern11: {
-//        setPattern(10);
-//        break;
-//      }
-//    case InputCommand::Pattern12: {
-//        setPattern(11);
-//        break;
-//      }
-//}
-

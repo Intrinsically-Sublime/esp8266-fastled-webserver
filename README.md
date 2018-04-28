@@ -18,8 +18,9 @@ It will work with any ESP8266 based controller.
 11) Removed unused functions to cleanup code.
 12) Made all patterns capable of addressing more than 256 LEDs.
 13) Rotate palettes after each time through all patterns in autoplay mode.
-14) Add Cylindrical option to wrap certain patterns around at the ends (Fireworks, Storm).
-14) Add blending to fire to smooth the animation.
+14) Added Cylindrical option to wrap certain patterns around at the ends (Fireworks, Storm).
+15) Added blending to fire to smooth the animation.
+16) Physical button control. Up to 5 buttons and 15 function calls (Pattern+/-, Palette+/-, Speed+/-, Brightness+/-, Power, Autoplay on/off, ~~WiFI on/off~~, ~~Audio on/off~~, ~~Starburst~~, ~~Scrolling Text on/off~~, ~~Unassigned~~). The first 2 buttons are enough to control most features.
 
 #### Custom irregular XY map generator based on Garrett Maces
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
@@ -142,14 +143,13 @@ Features
 
 ToDo
 --------
-* Add button control for 5 button Dpad for CC4P
-* Add button control for 2 buttons on CC2
 * Add MSGEQ7 patterns for XY matrix
 * Add bleeding patterns
 * Add scrolling text with input via web interface
 * Add intensity slider (Fireworks size/count, Rain strength)
 * Hide patterns based on Matrix size (Greater than 4x4 for Fireworks, Rain, Storm. Greater than 5x5 for scrolling text)
 * Save settings in array to allow each pattern to have their own settings
+* Add starburst. Takes advantage of the Supercapacitors on the CC4P board to allow short all white bursts.
 
 Hardware
 --------
