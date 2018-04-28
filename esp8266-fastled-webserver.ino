@@ -39,7 +39,9 @@ extern "C" {
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
-// True = Access point mode (direct connection to ESP8266), False = Station mode (connects to existing network)
+// True = Access point mode (direct connection to ESP8266)
+// False = Station mode (connects to existing network)
+// IPAddress = 192.168.4.1
 const bool apMode = true;
 
 //#define SERIAL_OUTPUT			// Uncomment to enable serial output. Useful for debugging
@@ -871,37 +873,32 @@ void adjustPattern(bool up)
 void autoRotatePalettes()
 {
 	if (currentPatternIndex == 0) {
-		currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
-		currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
-		currentTwinklePaletteIndex = (currentTwinklePaletteIndex+1)%twinklePaletteCount;
-
-		broadcastInt("twinklePalette", currentTwinklePaletteIndex);
-		broadcastInt("firePalette", currentFirePaletteIndex);
-		broadcastInt("palette", currentPaletteIndex);
+		setFirePalette((currentFirePaletteIndex+1)%firePaletteCount);
+		setPalette((currentPaletteIndex+1)%paletteCount);
+		setTwinklePalette((currentTwinklePaletteIndex+1)%twinklePaletteCount);
 	}
 }
 
 void rotatePalette(bool up)
 {
-	if (currentPaletteIndex == FIRE_POSITION) {
+	if (currentPatternIndex == FIRE_POSITION) {
 		if(up) {
-			currentFirePaletteIndex = (currentFirePaletteIndex+1)%firePaletteCount;
+			setFirePalette((currentFirePaletteIndex+1)%firePaletteCount);
 		} else {
-			currentFirePaletteIndex = (currentFirePaletteIndex+(firePaletteCount-1))%firePaletteCount;
+			setFirePalette((currentFirePaletteIndex+(firePaletteCount-1))%firePaletteCount);
 		}
-		broadcastInt("firePalette", currentFirePaletteIndex);
-	} else if (currentPaletteIndex == TWINKLE_POSITION) {
+	} else if (currentPatternIndex == TWINKLE_POSITION) {
 		if(up) {
-			currentTwinklePaletteIndex = (currentTwinklePaletteIndex+1)%twinklePaletteCount;
+			setTwinklePalette((currentTwinklePaletteIndex+1)%twinklePaletteCount);
 		} else {
-			currentTwinklePaletteIndex = (currentTwinklePaletteIndex+(firePaletteCount-1))%twinklePaletteCount;
+			setTwinklePalette((currentTwinklePaletteIndex+(twinklePaletteCount-1))%twinklePaletteCount);
 		}
 		broadcastInt("twinklePalette", currentTwinklePaletteIndex);
 	} else {
 		if(up) {
-			currentPaletteIndex = (currentPaletteIndex+1)%paletteCount;
+			setPalette((currentPaletteIndex+1)%paletteCount);
 		} else {
-			currentPaletteIndex = (currentPaletteIndex+(firePaletteCount-1))%paletteCount;
+			setPalette((currentPaletteIndex+(paletteCount-1))%paletteCount);
 		}
 		broadcastInt("palette", currentPaletteIndex);
 	}
@@ -1190,7 +1187,7 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
 		// Step 6. Add clouds if called for
 		if (clouds) {
 			uint16_t noiseScale = 250;	// A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-			const uint8_t cloudHeight = MATRIX_HEIGHT/4;
+			const uint8_t cloudHeight = (MATRIX_HEIGHT*0.2)+1;
 			// This is the array that we keep our computed noise values in
 			static uint8_t noise[MATRIX_WIDTH][cloudHeight];
 			int xoffset = noiseScale * x + gHue;
