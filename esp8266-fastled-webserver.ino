@@ -168,6 +168,13 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 #define VOLTAGE		   4.2		//Set voltage used 4.2v for Lipo or 5v for 5V power supply or USB battery bank
 #define WIFI_MAX_POWER     1		//Set wifi output power between 0 and 20.5db (default around 19db)
 
+#if MATRIX_HEIGHT >= 4 && MATRIX_WIDTH >= 4
+#define MATRIX_2D
+#endif
+#if MATRIX_HEIGHT >= 5 && MATRIX_WIDTH >= 3
+#define TEXT_MATRIX
+#endif
+
 // The 32bit version of our coordinates
 static uint16_t noiseX;
 static uint16_t noiseY;
@@ -197,6 +204,8 @@ uint8_t sparking = 84;
 uint8_t fireSmoothing = 220;
 
 uint8_t speed = 42;
+
+uint8_t intensity = 42;
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -299,8 +308,10 @@ typedef struct {
 typedef PatternAndName PatternAndNameList[];
 
 #include "TwinkleFOX.h"
+#ifdef MATRIX_2D
 //#include "FireWorks.h"  		// Fireworks or Fireworks2
 #include "FireWorks2.h" 		// Fireworks or Fireworks2
+#endif
 
 #define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
 #define RAIN_POSITION 2		// Used to keep track of where rain is in the pattern list
@@ -311,13 +322,15 @@ typedef PatternAndName PatternAndNameList[];
 // List of patterns to cycle through.  Each is defined as a separate function below.
 PatternAndNameList patterns = {
 	{ fire,				"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
+	#ifdef MATRIX_2D
 	{ fireworks,			"Fireworks -- Uses Speed" },
-	{ coloredRain,			"Rain -- Uses Speed, Color Picker" },
-	{ stormyRain,			"Storm -- Uses Speed, Color Picker" },
+	{ coloredRain,			"Rain -- Uses Speed, Intensity, Color Picker" },
+	{ stormyRain,			"Storm -- Uses Speed, Intensity, Color Picker" },
+	{ theMatrix,			"The Matrix -- Uses Speed, Intensity" },
+	#endif
 	{ pride,			"Pride -- Uses Speed" },
-	{ theMatrix,			"The Matrix -- Uses Speed" },
 	{ rainbow,			"Rainbow" },
-	{ rainbowWithGlitter,		"Rainbow w/Glitter" },
+	{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
 	{ rainbowSolid,			"Solid Rainbow -- Uses General Palettes" },
 	{ colorWaves,			"Color Waves" },
 	{ confetti,			"Confetti -- Uses General Palettes" },
@@ -326,7 +339,7 @@ PatternAndNameList patterns = {
 	{ juggle,			"Juggle -- Uses Speed" },
 
 	// TwinkleFOX with palettes
-	{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Twinkle Speed & Density" },
+	{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Speed, Intensity" },
 	{ showSolidColor,		"Solid Color -- Uses Color Picker" }
 };
 
@@ -522,6 +535,13 @@ void setupWebserver()
 		sendInt(speed);
 	});
 
+	webServer.on("/intensity", HTTP_POST, []() {
+		String value = webServer.arg("value");
+		intensity = value.toInt();
+		broadcastInt("intensity", intensity);
+		sendInt(intensity);
+	});
+
 	webServer.on("/solidColor", HTTP_POST, []() {
 		String r = webServer.arg("r");
 		String g = webServer.arg("g");
@@ -596,23 +616,23 @@ void setupWebserver()
 		sendInt(currentTwinklePaletteIndex);
 	});
 
-	webServer.on("/twinkleSpeed", HTTP_POST, []() {
-		String value = webServer.arg("value");
-		twinkleSpeed = value.toInt();
-		if(twinkleSpeed < 0) twinkleSpeed = 0;
-		else if (twinkleSpeed > 8) twinkleSpeed = 8;
-		broadcastInt("twinkleSpeed", twinkleSpeed);
-		sendInt(twinkleSpeed);
-	});
+//	webServer.on("/twinkleSpeed", HTTP_POST, []() {
+//		String value = webServer.arg("value");
+//		twinkleSpeed = value.toInt();
+//		if(twinkleSpeed < 0) twinkleSpeed = 0;
+//		else if (twinkleSpeed > 8) twinkleSpeed = 8;
+//		broadcastInt("twinkleSpeed", twinkleSpeed);
+//		sendInt(twinkleSpeed);
+//	});
 
-	webServer.on("/twinkleDensity", HTTP_POST, []() {
-		String value = webServer.arg("value");
-		twinkleDensity = value.toInt();
-		if(twinkleDensity < 0) twinkleDensity = 0;
-		else if (twinkleDensity > 8) twinkleDensity = 8;
-		broadcastInt("twinkleDensity", twinkleDensity);
-		sendInt(twinkleDensity);
-	});
+//	webServer.on("/twinkleDensity", HTTP_POST, []() {
+//		String value = webServer.arg("value");
+//		twinkleDensity = value.toInt();
+//		if(twinkleDensity < 0) twinkleDensity = 0;
+//		else if (twinkleDensity > 8) twinkleDensity = 8;
+//		broadcastInt("twinkleDensity", twinkleDensity);
+//		sendInt(twinkleDensity);
+//	});
 
 	//list directory
 	webServer.on("/list", HTTP_GET, handleFileList);
@@ -888,17 +908,19 @@ void rotateColor(bool up)
 			setTwinklePalette((currentTwinklePaletteIndex+(twinklePaletteCount-1))%twinklePaletteCount);
 		}
 		broadcastInt("twinklePalette", currentTwinklePaletteIndex);
+	#ifdef MATRIX_2D
 	} else if (currentPatternIndex == RAIN_POSITION || currentPatternIndex == STORM_POSITION) {
 		if(up) {
 			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidRainColor).hue+17)%255, 80, 172),solidRainColor);
 		} else {
 			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidRainColor).hue+238)%255, 80, 172),solidRainColor);
 		}
+	#endif
 	} else if (currentPatternIndex == SOLID_POSITION) {
 		if(up) {
-			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidColor).hue+5)%255, 255, 255),solidColor);
+			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidColor).hue+17)%255, 255, 255),solidColor);
 		} else {
-			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidColor).hue+250)%255, 255, 255),solidColor);
+			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidColor).hue+238)%255, 255, 255),solidColor);
 		}
 	} else {
 		if(up) {
@@ -1085,19 +1107,19 @@ void fire()
 void theMatrix()
 {
 	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds )
-	rain(60, 200, 20, 195, CRGB::Green, false, false, false);
+	rain(60, 200, map8(intensity,5,100), 195, CRGB::Green, false, false, false);
 }
 
 void coloredRain()
 {
 	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds )
-	rain(60, 180, 10, 10, solidRainColor, true, false, false);
+	rain(60, 180, map8(intensity,2,60), 10, solidRainColor, true, false, false);
 }
 
 void stormyRain()
 {
 	// ( Depth of dots, maximum brightness, frequency of new dots, length of tails, color, splashes, clouds )
-	rain(0, 90, 90, 10, solidRainColor, true, true, true);
+	rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
 }
 
 void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm)

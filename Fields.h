@@ -113,6 +113,10 @@ String getSpeed() {
   return String(speed);
 }
 
+String getIntensity() {
+  return String(intensity);
+}
+
 String getTwinklePalette() {
   return String(currentTwinklePaletteIndex);
 }
@@ -129,18 +133,19 @@ String getTwinklePalettes() {
   return json;
 }
 
-String getTwinkleSpeed() {
-  return String(twinkleSpeed);
-}
+//String getTwinkleSpeed() {
+//  return String(twinkleSpeed);
+//}
 
-String getTwinkleDensity() {
-  return String(twinkleDensity);
-}
+//String getTwinkleDensity() {
+//  return String(twinkleDensity);
+//}
 
 FieldList fields = {
   { "power", "Power", BooleanFieldType, 0, 1, getPower },
   { "brightness", "Brightness", NumberFieldType, 1, 255, getBrightness },
   { "speed", "Speed", NumberFieldType, 1, 255, getSpeed },
+  { "intensity", "Intensity", NumberFieldType, 1, 255, getIntensity },
   { "pattern", "Pattern", SelectFieldType, 0, patternCount, getPattern, getPatterns },
   { "palette", "General Palettes", SelectFieldType, 0, paletteCount, getPalette, getPalettes },
   { "twinklePalette", "Twinkle Palettes", SelectFieldType, 0, twinklePaletteCount, getTwinklePalette, getTwinklePalettes },
@@ -152,10 +157,10 @@ FieldList fields = {
   { "autoplay", "Autoplay", BooleanFieldType, 0, 1, getAutoplay },
   { "autoplayDuration", "Autoplay Duration", NumberFieldType, 0, 255, getAutoplayDuration },
   { "solidColor", "Solid Color", SectionFieldType },
-  { "solidColor", "Color", ColorFieldType, 0, 255, getSolidColor },
+  { "solidColor", "Color", ColorFieldType, 0, 255, getSolidColor }/* ,
   { "twinkles", "Twinkles", SectionFieldType },
   { "twinkleSpeed", "Twinkle Speed", NumberFieldType, 0, 8, getTwinkleSpeed },
-  { "twinkleDensity", "Twinkle Density", NumberFieldType, 0, 8, getTwinkleDensity }
+  { "twinkleDensity", "Twinkle Density", NumberFieldType, 0, 8, getTwinkleDensity } */
 };
 
 uint8_t fieldCount = ARRAY_SIZE(fields);

@@ -63,12 +63,12 @@
 // Overall twinkle speed.
 // 0 (VERY slow) to 8 (VERY fast).
 // 4, 5, and 6 are recommended, default is 4.
-uint8_t twinkleSpeed = 4;
+//uint8_t twinkleSpeed = 4;	// Now mapped to normal speed slider
 
 // Overall twinkle density.
 // 0 (NONE lit) to 8 (ALL lit at once).
 // Default is 5.
-uint8_t twinkleDensity = 5;
+//uint8_t twinkleDensity = 5;	// Now mapped to intensity slider
 
 // Background color for 'unlit' pixels
 // Can be set to CRGB::Black if desired.
@@ -284,7 +284,7 @@ void coolLikeIncandescent( CRGB& c, uint8_t phase)
 //  should light at all during this cycle, based on the twinkleDensity.
 CRGB computeOneTwinkle( uint32_t ms, uint8_t salt)
 {
-  uint16_t ticks = ms >> (8-twinkleSpeed);
+  uint16_t ticks = ms >> (8-(map(speed,-3,5,1,255)+3));	// Used to use twinkleSpeed. Now mapped to normal speed slider
   uint8_t fastcycle8 = ticks;
   uint16_t slowcycle16 = (ticks >> 8) + salt;
   slowcycle16 += sin8( slowcycle16);
@@ -292,7 +292,7 @@ CRGB computeOneTwinkle( uint32_t ms, uint8_t salt)
   uint8_t slowcycle8 = (slowcycle16 & 0xFF) + (slowcycle16 >> 8);
 
   uint8_t bright = 0;
-  if( ((slowcycle8 & 0x0E)/2) < twinkleDensity) {
+  if( ((slowcycle8 & 0x0E)/2) < (map(speed,-3,5,1,255)+3) ) {	// Used to use twinkleDensity. Now mapped to intensity slider
     bright = attackDecayWave8( fastcycle8);
   }
 

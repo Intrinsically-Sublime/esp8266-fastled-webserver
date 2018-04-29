@@ -21,6 +21,7 @@ It will work with any ESP8266 based controller.
 14) Added Cylindrical option to wrap certain patterns around at the ends (Fireworks, Storm).
 15) Added blending to fire to smooth the animation.
 16) Physical button control. Up to 5 buttons and 15 function calls (Pattern+/-, Palette/Color+/-, Speed+/-, Brightness+/-, Power, Autoplay on/off, ~~WiFI on/off~~, ~~Audio on/off~~, ~~Scrolling Text on/off~~, ~~Unassigned~~, ~~Unassigned~~). The first 2 buttons are enough to control most features.
+17) Intensity slider to control rain intensity and twinkle density.
 
 #### Custom irregular XY map generator based on Garrett Maces
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
@@ -41,19 +42,22 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Settings
   * Speed -- Adjusts the rate of rainfall
   * Color Picker -- Sets the color of the rain
+  * Intensity -- Adjusts the intensity of the rain
 ---
 ##### Storm -- Colored rain falling down from clouds at the top and splashing at the bottom with peridodical lightning bolts
 * Settings
   * Speed -- Adjusts the rate of rainfall
   * Color Picker -- Sets the color of the rain
----
-##### Pride -- Ever changing 2D interference patterns
-* Settings
-  * Speed -- Adjusts the rate of movement of the interference patterns
+  * Intensity -- Adjusts the intensity of the rain
 ---
 ##### The Matrix -- Green dots raining down from the top
 * Settings
   * Speed -- Adjusts the rate the dots move from top to bottom
+  * Intensity -- Adjusts the intensity of the dots
+---
+##### Pride -- Ever changing 2D interference patterns
+* Settings
+  * Speed -- Adjusts the rate of movement of the interference patterns
 ---
 ##### Rainbow -- Flowing rainbow over the height of the matrix
 ---
@@ -86,8 +90,8 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 ##### TwinkleFOX -- Twinkling lights that randomly fade in and out from a palette
 * Settings
   * Twinkle Palettes -- See Palettes section below
-  * Twinkle Speed -- Rate at which the twinkles fade in and out
-  * Twinkle Density -- Density of twinkles ranging from 0% to 100% coverage
+  * Speed -- Rate at which the twinkles fade in and out
+  * Intensity -- Density of twinkles ranging from 0% to 100% coverage
 ---
 ##### Solid Color -- Fill all LEDs with the smae color
 * Settings
@@ -146,9 +150,8 @@ ToDo
 * Add MSGEQ7 patterns for XY matrix
 * Add bleeding patterns
 * Add scrolling text with input via web interface
-* Add intensity slider (Fireworks size/count, Rain strength)
-* Hide patterns based on Matrix size (Greater than 4x4 for Fireworks, Rain, Storm. Greater than 5x5 for scrolling text)
 * Save settings in array to allow each pattern to have their own settings
+* Add reset for settings to default
 
 Hardware
 --------
