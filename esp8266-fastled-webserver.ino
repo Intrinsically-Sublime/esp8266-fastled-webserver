@@ -60,7 +60,7 @@ char* password = "";
 #include "FSBrowser.h"
 
 // Define controller being used (Novel Mutations Costume Controllers CC2, CC4P)
-#define				CC4P
+#define			CC4P
 //#define			CC2
 
 #define DEVICE_NAME 		"Test"
@@ -89,8 +89,8 @@ char* password = "";
 ///////////////////////// Replace with custom XY map for irregular Matrix. ///////////////////////////////
 /// To generate irregular Matrix see https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/ ///
 
-//#define MATRIX_WIDTH		24	// Column count ( widest horizontal width for irregular matrix )
-//#define MATRIX_HEIGHT		25	// Row count ( tallest vertical height for irregular matrix )
+#define MATRIX_WIDTH		24	// Column count ( widest horizontal width for irregular matrix )
+#define MATRIX_HEIGHT		25	// Row count ( tallest vertical height for irregular matrix )
 //#define CYLINDRICAL_MATRIX		// Uncomment if your matrix wraps around in a cylinder
 
 //#define SERPENTINE			// Uncomment for ZigZag/Serpentine wiring (Not used with irregular matrix)
@@ -176,9 +176,9 @@ static uint16_t noiseZ;
 // Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
 uint_fast16_t tempMatrix[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
 
-const uint8_t brightnessCount = 6;
-uint8_t brightnessMap[brightnessCount] = { 16, 32, 64, 128, 192, 255 };
-uint8_t brightnessIndex = 4;
+const uint8_t brightnessMap[] = { 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128, 160, 192, 255 };
+const uint8_t brightnessCount = ARRAY_SIZE(brightnessMap);
+uint8_t brightnessIndex = 15;
 
 // ten seconds per color palette makes a good demo
 // 20-120 is better for deployment
@@ -303,7 +303,10 @@ typedef PatternAndName PatternAndNameList[];
 #include "FireWorks2.h" 		// Fireworks or Fireworks2
 
 #define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
+#define RAIN_POSITION 2		// Used to keep track of where rain is in the pattern list
+#define STORM_POSITION 3	// Used to keep track of where storm is in the pattern list
 #define TWINKLE_POSITION 14	// Used to keep track of where twinkle is in the pattern list
+#define SOLID_POSITION 15	// Used to keep track of where solid is in the pattern list
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 PatternAndNameList patterns = {
@@ -324,7 +327,6 @@ PatternAndNameList patterns = {
 
 	// TwinkleFOX with palettes
 	{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Twinkle Speed & Density" },
-
 	{ showSolidColor,		"Solid Color -- Uses Color Picker" }
 };
 
@@ -833,7 +835,7 @@ void setSolidColor(uint8_t r, uint8_t g, uint8_t b)
 		solidRainColor = CRGB(r, g, b);
 	} else {
 		solidColor = CRGB(r, g, b);
-		setPattern(patternCount - 1);
+		setPattern(SOLID_POSITION);
 	}
 
 	EEPROM.write(2, r);
@@ -848,17 +850,9 @@ void setSolidColor(uint8_t r, uint8_t g, uint8_t b)
 void adjustPattern(bool up)
 {
 	if (up) {
-		currentPatternIndex++;
+		currentPatternIndex = (currentPatternIndex+1)%patternCount;
 	} else {
-		currentPatternIndex--;
-	}
-
-	// wrap around at the ends
-	if (currentPatternIndex < 0) {
-		currentPatternIndex = patternCount - 1;
-	}
-	if (currentPatternIndex >= patternCount) {
-		currentPatternIndex = 0;
+		currentPatternIndex = (currentPatternIndex+(patternCount-1))%patternCount;
 	}
 
 	if (autoplay == 0) {
@@ -879,7 +873,7 @@ void autoRotatePalettes()
 	}
 }
 
-void rotatePalette(bool up)
+void rotateColor(bool up)
 {
 	if (currentPatternIndex == FIRE_POSITION) {
 		if(up) {
@@ -894,6 +888,18 @@ void rotatePalette(bool up)
 			setTwinklePalette((currentTwinklePaletteIndex+(twinklePaletteCount-1))%twinklePaletteCount);
 		}
 		broadcastInt("twinklePalette", currentTwinklePaletteIndex);
+	} else if (currentPatternIndex == RAIN_POSITION || currentPatternIndex == STORM_POSITION) {
+		if(up) {
+			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidRainColor).hue+17)%255, 80, 172),solidRainColor);
+		} else {
+			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidRainColor).hue+238)%255, 80, 172),solidRainColor);
+		}
+	} else if (currentPatternIndex == SOLID_POSITION) {
+		if(up) {
+			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidColor).hue+5)%255, 255, 255),solidColor);
+		} else {
+			hsv2rgb_rainbow(CHSV((rgb2hsv_approximate(solidColor).hue+250)%255, 255, 255),solidColor);
+		}
 	} else {
 		if(up) {
 			setPalette((currentPaletteIndex+1)%paletteCount);
@@ -1015,7 +1021,7 @@ void setBrightness(uint8_t value)
 }
 
 ////////////////////////////////////// Animation Functions ////////////////////////////////////////
-////////////////////////// All of them should work with irregular Matrixes ////////////////////////
+/////////////////////// All of these should work with irregular Matrices //////////////////////////
 
 void showSolidColor()
 {
@@ -1071,7 +1077,7 @@ void fire()
 		// Step 4.  Map from heat cells to LED colors
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
 			// Blend new data with previous frame. Average data between neighbouring pixels
-			nblend(leds[XY(x,y)], ColorFromPalette(fire_p, tempMatrix[x][y] + tempMatrix[wrapX(x+1)][y] / 2), fireSmoothing);
+			nblend(leds[XY(x,y)], ColorFromPalette(fire_p, ((tempMatrix[x][y]*0.7) + (tempMatrix[wrapX(x+1)][y]*0.3))), fireSmoothing);
 		}
 	}
 }

@@ -52,8 +52,8 @@ void setupButtons() {
 //
 // LEFT            CENTER            RIGHT
 // 0 = Pattern--   0 = Text on/off   0 = Pattern++
-// 1 = Palette--   1 = Audio on/off  1 = Palette++
-// 2 = Autoplay    2 = StarBurst     2 = LEDs on/off
+// 1 = Color/Pal-- 1 = Audio on/off  1 = Color/Pal++
+// 2 = Autoplay    2 = Unassigned    2 = LEDs on/off
 //
 //                 DOWN
 //                 0 = Brightness--
@@ -81,7 +81,7 @@ void processButtonPress(uint8_t b, uint8_t pressDuration)
 			if(pressDuration == 0) {	// Pattern++
 				adjustPattern(true);
 			} else if(pressDuration == 1) {	// Palette++
-				rotatePalette(true);
+				rotateColor(true);
 			} else if(pressDuration == 2) {	// LEDs On/Off
 				setPower(!power);
 			}
@@ -99,7 +99,7 @@ void processButtonPress(uint8_t b, uint8_t pressDuration)
 			if(pressDuration == 0) {	// Pattern--
 				adjustPattern(false);
 			} else if(pressDuration == 1) {	// Palette--
-				rotatePalette(false);
+				rotateColor(false);
 			} else if(pressDuration == 2) { // Autoplay
 				setAutoplay(!autoplay);
 			}
@@ -109,8 +109,8 @@ void processButtonPress(uint8_t b, uint8_t pressDuration)
 //				enableText = !enableText;
 			} if(pressDuration == 1) {	// Audio on/off
 //				enableAudio = !enableAudio;
-			} else if(pressDuration == 2) {	// StarBurst
-//				starBurst();
+			} else if(pressDuration == 2) {	// Unassigned
+				// Unassigned
 			}
 		break;
 	}
