@@ -91,9 +91,9 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Settings
   * Twinkle Palettes -- See Palettes section below
   * Speed -- Rate at which the twinkles fade in and out
-  * Intensity -- Density of twinkles ranging from 0% to 100% coverage
+  * Intensity -- Density of twinkles ranging from 25% to 100% coverage
 ---
-##### Solid Color -- Fill all LEDs with the smae color
+##### Solid Color -- Fill all LEDs with the same color
 * Settings
   * Color Picker -- Sets the color
 

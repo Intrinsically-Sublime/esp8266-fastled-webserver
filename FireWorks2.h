@@ -180,7 +180,7 @@ void fireworks()
 	CRGB sky1(0,0,2);				// Background sky color (will only work if brightness is set high 128 or up !!)
 	CRGB sky2(2,2,2);				// Alternate sky color to create a star twinkle effect 
 
-	for( int h = 0; h < MATRIX_WIDTH; h++) {	// All leds will be set to 'sky1' (very dark blue) 
+	for( uint8_t h = 0; h < MATRIX_WIDTH; h++) {	// All leds will be set to 'sky1' (very dark blue) 
 		for( int v = 0; v < MATRIX_HEIGHT; v++) {
 			leds[XY(h,v)] = sky1;
 		}
