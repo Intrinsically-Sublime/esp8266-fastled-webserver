@@ -226,7 +226,7 @@ void setTwinklePalette(uint8_t value)
 	currentTwinklePaletteIndex = value;
 
 	EEPROM.write(10, currentTwinklePaletteIndex);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	broadcastInt("twinklePalette", currentTwinklePaletteIndex);
 }
@@ -284,7 +284,7 @@ void coolLikeIncandescent( CRGB& c, uint8_t phase)
 //  should light at all during this cycle, based on the twinkleDensity.
 CRGB computeOneTwinkle( uint32_t ms, uint8_t salt)
 {
-  uint16_t ticks = ms >> (8-(map(speed,-3,5,1,255)+3));	// Used to use twinkleSpeed. Now mapped to normal speed slider
+  uint16_t ticks = ms >> (8-(map(speed,1,255,3,7)+1));	// Used to use twinkleSpeed. Now mapped to normal speed slider
   uint8_t fastcycle8 = ticks;
   uint16_t slowcycle16 = (ticks >> 8) + salt;
   slowcycle16 += sin8( slowcycle16);
@@ -292,7 +292,7 @@ CRGB computeOneTwinkle( uint32_t ms, uint8_t salt)
   uint8_t slowcycle8 = (slowcycle16 & 0xFF) + (slowcycle16 >> 8);
 
   uint8_t bright = 0;
-  if( ((slowcycle8 & 0x0E)/2) < (map(speed,-3,5,1,255)+3) ) {	// Used to use twinkleDensity. Now mapped to intensity slider
+  if( ((slowcycle8 & 0x0E)/2) < map(intensity,1,255,2,8) ) {	// Used to use twinkleDensity. Now mapped to intensity slider
     bright = attackDecayWave8( fastcycle8);
   }
 

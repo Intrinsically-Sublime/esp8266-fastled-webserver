@@ -54,8 +54,8 @@ ESP8266HTTPUpdateServer httpUpdateServer;
 const char WiFiAPPSK[] = "";
 
 // Wi-Fi network to connect to (if not in AP mode)
-char* ssid = "";
-char* password = "";
+const char* ssid = "";
+const char* password = "";
 bool enableWiFi = true;
 
 #include "FSBrowser.h"
@@ -134,7 +134,7 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 	#endif
 
 	#ifdef HORIZONTAL
-	int xx = x;
+	uint8_t xx = x;
 	x = y;
 	y = xx;
 	#define XorY MATRIX_WIDTH
@@ -193,7 +193,7 @@ uint8_t brightnessIndex = 15;
 
 // ten seconds per color palette makes a good demo
 // 20-120 is better for deployment
-uint8_t secondsPerPalette = 10;
+const uint8_t secondsPerPalette = 10;
 
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
@@ -205,7 +205,7 @@ uint8_t sparking = 84;
 
 // SMOOTHING; How much blending should be done between frames
 // Lower = more blending and smoother flames. Higher = less blending and flickery flames
-uint8_t fireSmoothing = 220;
+const uint8_t fireSmoothing = 220;
 
 uint8_t speed = 42;
 
@@ -222,18 +222,18 @@ uint8_t gCurrentPaletteNumber = 0;
 CRGBPalette16 gCurrentPalette( CRGB::Black);
 CRGBPalette16 gTargetPalette( gGradientPalettes[0] );
 
-CRGBPalette16 WoodFireColors_p = CRGBPalette16(CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold);			//* Orange
-CRGBPalette16 SodiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod);		//* Yellow
-CRGBPalette16 CopperFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen);		//* Green
-CRGBPalette16 AlcoholFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue);	//* Blue
-CRGBPalette16 RubidiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue);		//* Indigo
-CRGBPalette16 PotassiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink);	//* Violet
-CRGBPalette16 LithiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::FireBrick, CRGB::Pink, CRGB::DeepPink);		//* Red
+const CRGBPalette16 WoodFireColors_p = CRGBPalette16(CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold);		//* Orange
+const CRGBPalette16 SodiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod);		//* Yellow
+const CRGBPalette16 CopperFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Green, CRGB::GreenYellow, CRGB::LimeGreen);	//* Green
+const CRGBPalette16 AlcoholFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::DeepSkyBlue, CRGB::LightSkyBlue);//* Blue
+const CRGBPalette16 RubidiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::Indigo, CRGB::DarkBlue);	//* Indigo
+const CRGBPalette16 PotassiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Indigo, CRGB::MediumPurple, CRGB::DeepPink);//* Violet
+const CRGBPalette16 LithiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::FireBrick, CRGB::Pink, CRGB::DeepPink);	//* Red
 
 uint8_t currentPatternIndex = 0; // Index number of which pattern is current
 uint8_t autoplay = 0;
 
-uint8_t autoplayDuration = 10;
+uint8_t autoplayDuration = 60;
 unsigned long autoPlayTimeout = 0;
 
 uint8_t currentPaletteIndex = 0;
@@ -313,8 +313,8 @@ typedef PatternAndName PatternAndNameList[];
 
 #include "TwinkleFOX.h"
 #ifdef MATRIX_2D
-//#include "FireWorks.h"  		// Fireworks or Fireworks2
-#include "FireWorks2.h" 		// Fireworks or Fireworks2
+//#include "FireWorks.h"  	// Fireworks or Fireworks2
+#include "FireWorks2.h" 	// Fireworks or Fireworks2
 #endif
 
 #define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
@@ -455,12 +455,12 @@ void setWiFi()
 	}
 
 	fill_solid(leds, INDICATOR_LEDS, CRGB::Black);
-	for (int i = INDICATOR_LEDS; i > 0; i--) {
+	for (uint8_t i = INDICATOR_LEDS; i > 0; i--) {
 		leds[i] = color;
 		FastLED.show();
 		FastLED.delay(50);
 	}
-	for (int i = INDICATOR_LEDS; i > 0; i--) {
+	for (uint8_t i = INDICATOR_LEDS; i > 0; i--) {
 		leds[i] = CRGB::Black;
 		FastLED.show();
 		FastLED.delay(50);
@@ -907,7 +907,7 @@ void setSolidColor(CRGB color)
 
 void setSolidColor(uint8_t r, uint8_t g, uint8_t b)
 {
-	if(currentPatternIndex == 2 || currentPatternIndex == 3) {
+	if(currentPatternIndex == RAIN_POSITION || currentPatternIndex == STORM_POSITION) {
 		solidRainColor = CRGB(r, g, b);
 	} else {
 		solidColor = CRGB(r, g, b);
@@ -1115,7 +1115,7 @@ void confetti()
 {
 	// random colored speckles that blink in and fade smoothly
 	fadeToBlackBy( leds, NUM_LEDS, 10);
-	int pos = random16(NUM_LEDS);
+	uint16_t pos = random16(NUM_LEDS);
 	leds[pos] += ColorFromPalette(palettes[currentPaletteIndex], gHue + random8(64));
 }
 
@@ -1302,7 +1302,7 @@ void bpm()
 	uint8_t beat = beatsin8(map8(speed,30,150), 64, 255);
 	CRGBPalette16 palette = palettes[currentPaletteIndex];
 	for ( int r = 0; r < MATRIX_HEIGHT; r++) {
-		for (int i = 0; i < MATRIX_WIDTH; i++) {
+		for (uint8_t i = 0; i < MATRIX_WIDTH; i++) {
 			#ifdef REVERSE_ORDER
 			leds[XY(i,MATRIX_HEIGHT-1-r)] = ColorFromPalette(palette, gHue + (r * 2), beat - gHue + (r * 10));
 			#else
@@ -1343,7 +1343,7 @@ void juggle()
 	fadeToBlackBy(leds, NUM_LEDS, faderate);
 	for ( int i = 0; i < numdots; i++) {
 		uint16_t pos_n = beatsin16(basebeat + i + numdots, 0, MATRIX_HEIGHT-1);
-		for (int c = 0; c < MATRIX_WIDTH; c++) {
+		for (uint8_t c = 0; c < MATRIX_WIDTH; c++) {
 			leds[XY(c,pos_n)] += CHSV(gHue + curhue, thissat, thisbright);
 		}
 		curhue += hueinc;
@@ -1405,7 +1405,7 @@ void colorwaves( CRGB* ledarray, uint16_t numleds, CRGBPalette16& palette)
 		uint16_t pixelnumber = i;
 		pixelnumber = (numleds - 1) - pixelnumber;
 
-		for (int c = 0; c < MATRIX_WIDTH; c++) {
+		for (uint8_t c = 0; c < MATRIX_WIDTH; c++) {
 			#ifdef REVERSE_ORDER
 			nblend( ledarray[XY(c,numleds-1-pixelnumber)], newcolor, 128);
 			#else
@@ -1468,7 +1468,7 @@ void rainbow()
 	CRGB tempStrip[MATRIX_HEIGHT];
 	fill_rainbow(tempStrip, MATRIX_HEIGHT, gHue, 10);
 
-	for (int x = 0; x < MATRIX_WIDTH; x++) {
+	for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
 			#ifdef REVERSE_ORDER
 			leds[XY(x,y)] = tempStrip[y];
@@ -1500,7 +1500,7 @@ void sinelon()
 		fill_solid( leds+prevpos, (pos-prevpos)+1, color);
 	}
 
-	for (int x = 1; x < MATRIX_WIDTH; x++) {
+	for (uint8_t x = 1; x < MATRIX_WIDTH; x++) {
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
 			leds[XY(x,y)] = leds[y];
 		}
