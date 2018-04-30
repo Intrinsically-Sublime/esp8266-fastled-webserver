@@ -66,15 +66,11 @@ void processButtonPress(uint8_t b, uint8_t pressDuration)
 	switch(b) {
 		case 0:	// CC4P = Up, CC2 = Top
 			if(pressDuration == 0) {	// Brightness++
-				#ifdef CC2
-				brightness = (brightness+15)%255;
-				#else
 				adjustBrightness(true);
-				#endif
 			} else if(pressDuration == 1) {	// Speed++
 				speed = (speed+10)%255;
 			} else if(pressDuration == 2) {	// WiFi on/off
-//				enableWiFi = !enableWiFi;
+				setWiFi();
 			}
 		break;
 		case 1:	// CC4P = Right, CC2 = Bottom

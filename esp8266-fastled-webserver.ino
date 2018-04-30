@@ -56,6 +56,7 @@ const char WiFiAPPSK[] = "";
 // Wi-Fi network to connect to (if not in AP mode)
 char* ssid = "";
 char* password = "";
+bool enableWiFi = true;
 
 #include "FSBrowser.h"
 
@@ -179,6 +180,9 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 static uint16_t noiseX;
 static uint16_t noiseY;
 static uint16_t noiseZ;
+
+// Flag used to prevent over writing to the EEPROM
+bool eepromChanged = false;
 
 // Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
 uint_fast16_t tempMatrix[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
@@ -428,6 +432,50 @@ void setup() {
 	noiseZ = random16();
 }
 
+void setWiFi()
+{
+	if (enableWiFi) {
+		disableWiFi();
+	} else {
+		setupWiFi();
+	}
+
+	#if NUM_LEDS > 10
+	#define INDICATOR_LEDS 10
+	#else
+	#define INDICATOR_LEDS NUM_LEDS
+	#endif
+
+	CRGB color;
+
+	if (enableWiFi) {
+		color = CRGB::Blue;
+	} else {
+		color = CRGB::Red;
+	}
+
+	fill_solid(leds, INDICATOR_LEDS, CRGB::Black);
+	for (int i = INDICATOR_LEDS; i > 0; i--) {
+		leds[i] = color;
+		FastLED.show();
+		FastLED.delay(50);
+	}
+	for (int i = INDICATOR_LEDS; i > 0; i--) {
+		leds[i] = CRGB::Black;
+		FastLED.show();
+		FastLED.delay(50);
+	}
+}
+
+void disableWiFi()
+{
+	WiFi.disconnect(); 
+	WiFi.mode(WIFI_OFF);
+	WiFi.forceSleepBegin();
+	delay(1);
+	enableWiFi = false;
+}
+
 void setupWiFi() 
 {
 	//Set wifi output power between 0 and 20.5db (default around 19db)
@@ -484,6 +532,7 @@ void setupWiFi()
 		}
 		#endif
 	}
+	enableWiFi = true;
 }
 
 void setupWebserver()
@@ -695,6 +744,13 @@ void loop() {
 		readButtons();
 	}
 
+	EVERY_N_MINUTES(5) {	// Only write to EEPROM every N minutes and only when data has been changed to prevent wear on the EEPROM
+		if (eepromChanged) {
+			EEPROM.commit();
+			eepromChanged = false;
+		}
+	}
+
 	if (power == 0) {
 		fill_solid(leds, NUM_LEDS, CRGB::Black);
 		FastLED.show();
@@ -827,7 +883,7 @@ void setAutoplay(uint8_t value)
 	autoplay = value == 0 ? 0 : 1;
 
 	EEPROM.write(6, autoplay);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	broadcastInt("autoplay", autoplay);
 }
@@ -837,7 +893,7 @@ void setAutoplayDuration(uint8_t value)
 	autoplayDuration = value;
 
 	EEPROM.write(7, autoplayDuration);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	autoPlayTimeout = millis() + (autoplayDuration * 1000);
 
@@ -861,7 +917,7 @@ void setSolidColor(uint8_t r, uint8_t g, uint8_t b)
 	EEPROM.write(2, r);
 	EEPROM.write(3, g);
 	EEPROM.write(4, b);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	broadcastString("color", String(solidColor.r) + "," + String(solidColor.g) + "," + String(solidColor.b));
 }
@@ -877,7 +933,7 @@ void adjustPattern(bool up)
 
 	if (autoplay == 0) {
 		EEPROM.write(1, currentPatternIndex);
-		EEPROM.commit();
+		eepromChanged = true;
 	}
 
 	broadcastInt("pattern", currentPatternIndex);
@@ -942,7 +998,7 @@ void setPattern(uint8_t value)
 
 	if (autoplay == 0) {
 		EEPROM.write(1, currentPatternIndex);
-		EEPROM.commit();
+		eepromChanged = true;
 	}
 
 	broadcastInt("pattern", currentPatternIndex);
@@ -967,7 +1023,7 @@ void setPalette(uint8_t value)
 	currentPaletteIndex = value;
 
 	EEPROM.write(8, currentPaletteIndex);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	broadcastInt("palette", currentPaletteIndex);
 }
@@ -991,7 +1047,7 @@ void setFirePalette(uint8_t value)
 	currentFirePaletteIndex = value;
 
 	EEPROM.write(9, currentFirePaletteIndex);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	broadcastInt("firePalette", currentFirePaletteIndex);
 }
@@ -1008,10 +1064,10 @@ void setFirePaletteName(String name)
 
 void adjustBrightness(bool up)
 {
-	if (up && brightnessIndex < brightnessCount - 1) {
-		brightnessIndex++;
-	} else if (!up && brightnessIndex > 0) {
-		brightnessIndex--;
+	if (up) {
+		brightnessIndex = (brightnessIndex+1)%brightnessCount;
+	} else {
+		brightnessIndex = (brightnessIndex+(brightnessCount-1))%brightnessCount;
 	}
 
 	brightness = brightnessMap[brightnessIndex];
@@ -1019,7 +1075,7 @@ void adjustBrightness(bool up)
 	FastLED.setBrightness(brightness);
 
 	EEPROM.write(0, brightness);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	broadcastInt("brightness", brightness);
 }
@@ -1037,7 +1093,7 @@ void setBrightness(uint8_t value)
 	FastLED.setBrightness(brightness);
 
 	EEPROM.write(0, brightness);
-	EEPROM.commit();
+	eepromChanged = true;
 
 	broadcastInt("brightness", brightness);
 }

@@ -152,7 +152,6 @@ ToDo
 * Add scrolling text with input via web interface
 * Save settings in array to allow each pattern to have their own settings
 * Add reset for settings to default
-* Add Wifi On/Off button control
 * Add Audio analyzer On/Off button control
 
 Hardware
