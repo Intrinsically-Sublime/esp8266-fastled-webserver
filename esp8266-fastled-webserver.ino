@@ -61,8 +61,8 @@ bool enableWiFi = true;
 #include "FSBrowser.h"
 
 // Define controller being used (Novel Mutations Costume Controllers CC2, CC4P)
-#define			CC4P
-//#define			CC2
+#define			CC4P	// ESP-12 based with MSGEQ7 and 5 button D pad and 4 way parallel output
+//#define			CC2	// ESP-01 based with 2 button input and 2 outputs
 
 #define DEVICE_NAME 		"Test"
 //#define REVERSE_ORDER			// Uncomment to have the patterns run in reverse direction (for a limited number of patterns)
@@ -317,11 +317,16 @@ typedef PatternAndName PatternAndNameList[];
 #include "FireWorks2.h" 	// Fireworks or Fireworks2
 #endif
 
+#ifdef MATRIX_2D
 #define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
 #define RAIN_POSITION 2		// Used to keep track of where rain is in the pattern list
 #define STORM_POSITION 3	// Used to keep track of where storm is in the pattern list
 #define TWINKLE_POSITION 14	// Used to keep track of where twinkle is in the pattern list
 #define SOLID_POSITION 15	// Used to keep track of where solid is in the pattern list
+#else
+#define TWINKLE_POSITION 10	// Used to keep track of where twinkle is in the pattern list
+#define SOLID_POSITION 11	// Used to keep track of where solid is in the pattern list
+#endif
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 PatternAndNameList patterns = {
