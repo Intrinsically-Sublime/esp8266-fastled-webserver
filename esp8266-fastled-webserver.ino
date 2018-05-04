@@ -186,6 +186,8 @@ bool eepromChanged = false;
 
 // Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
 uint_fast16_t tempMatrix[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
+// Temporary CRGB array for storing RGB data for one column to be duplicated.
+CRGB tempHeightStrip[MATRIX_HEIGHT];
 
 const uint8_t brightnessMap[] = { 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128, 160, 192, 255 };
 const uint8_t brightnessCount = ARRAY_SIZE(brightnessMap);
@@ -749,7 +751,8 @@ void loop() {
 		readButtons();
 	}
 
-	EVERY_N_MINUTES(5) {	// Only write to EEPROM every N minutes and only when data has been changed to prevent wear on the EEPROM
+	// Only write to EEPROM every N minutes and only when data has been changed to prevent wear on the EEPROM
+	EVERY_N_MINUTES(5) {
 		if (eepromChanged) {
 			EEPROM.commit();
 			eepromChanged = false;
@@ -1369,7 +1372,6 @@ void colorwaves( CRGB* ledarray, uint16_t numleds, CRGBPalette16& palette)
 	static uint16_t sLastMillis = 0;
 	static uint16_t sHue16 = 0;
 
-	// uint8_t sat8 = beatsin88( 87, 220, 250);
 	uint8_t brightdepth = beatsin88( 341, 96, 224);
 	uint16_t brightnessthetainc16 = beatsin88( 203, (25 * 256), (40 * 256));
 	uint8_t msmultiplier = beatsin88(147, 23, 60);
@@ -1470,15 +1472,14 @@ void pride()
 
 void rainbow()
 {
-	CRGB tempStrip[MATRIX_HEIGHT];
-	fill_rainbow(tempStrip, MATRIX_HEIGHT, gHue, 10);
+	fill_rainbow(tempHeightStrip, MATRIX_HEIGHT, gHue, 10);
 
 	for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
 			#ifdef REVERSE_ORDER
-			leds[XY(x,y)] = tempStrip[y];
+			leds[XY(x,y)] = tempHeightStrip[y];
 			#else
-			leds[XY(x,y)] = tempStrip[MATRIX_HEIGHT-1-y];
+			leds[XY(x,y)] = tempHeightStrip[MATRIX_HEIGHT-1-y];
 			#endif
 		}
 	}
@@ -1494,20 +1495,20 @@ void rainbowWithGlitter()
 void sinelon()
 {
 	// a colored dot sweeping back and forth, with fading trails
-	fadeToBlackBy( leds, NUM_LEDS, 20);
+	fadeToBlackBy( tempHeightStrip, MATRIX_HEIGHT, 20);
 	int pos = beatsin16(map8(speed,30,150), 0, MATRIX_HEIGHT - 1);
 	static int prevpos = 0;
 	CRGB color = ColorFromPalette(palettes[currentPaletteIndex], gHue, 255);
 
 	if( pos < prevpos ) {
-		fill_solid( leds+pos, (prevpos-pos)+1, color);
+		fill_solid( tempHeightStrip+pos, (prevpos-pos)+1, color);
 	} else {
-		fill_solid( leds+prevpos, (pos-prevpos)+1, color);
+		fill_solid( tempHeightStrip+prevpos, (pos-prevpos)+1, color);
 	}
 
-	for (uint8_t x = 1; x < MATRIX_WIDTH; x++) {
+	for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
 		for (int y = 0; y < MATRIX_HEIGHT; y++) {
-			leds[XY(x,y)] = leds[y];
+			leds[XY(x,y)] = tempHeightStrip[y];
 		}
 	}
 	prevpos = pos;
