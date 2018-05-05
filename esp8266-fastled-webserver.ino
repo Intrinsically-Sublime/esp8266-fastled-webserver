@@ -70,11 +70,13 @@ bool enableWiFi = true;
 // CC2 Specific Settings
 #ifdef CC2
 #define DATA_PIN_A		1
-#define LED_TYPE		WS2812B
-#define COLOR_ORDER		GRB
+#define LED_TYPE_A		WS2812B
+#define COLOR_ORDER_A		GRB
 
 // Second output settings. Leave commented unless you are using it.
 //#define DATA_PIN_B		3	// Uncomment to use the second output. NOT PARALLEL OUTPUT
+#define LED_TYPE_B		WS2812B	// Only used if DATA_PIN_B is defined
+#define COLOR_ORDER_B		GRB	// Only used if DATA_PIN_B is defined
 #define NUM_LEDS_STRIP_A	50	// Only used if DATA_PIN_B is defined
 #define NUM_LEDS_STRIP_B	50	// Only used if DATA_PIN_B is defined
 #endif
@@ -369,26 +371,25 @@ void setup() {
 
 	#ifdef CC4P
 	#ifdef PARALLEL_OUTPUT
-	FastLED.addLeds<WS2813_PORTA,NUM_STRIPS>(leds, NUM_LEDS_PER_STRIP);
+	FastLED.addLeds<WS2813_PORTA,NUM_STRIPS>(leds, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 	#else
-	FastLED.addLeds<WS2813,13,GRB>(leds, 0, NUM_LEDS_PER_STRIP);
-	FastLED.addLeds<WS2813,14,GRB>(leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
-	FastLED.addLeds<WS2813,15,GRB>(leds, 2*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
-	FastLED.addLeds<WS2813,12,GRB>(leds, 3*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP);
+	FastLED.addLeds<WS2813,13,GRB>(leds, 0, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<WS2813,14,GRB>(leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<WS2813,15,GRB>(leds, 2*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<WS2813,12,GRB>(leds, 3*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 	#endif
 	#endif
 
 	#ifdef CC2
 	#ifdef DATA_PIN_B
-	FastLED.addLeds<LED_TYPE, DATA_PIN_A, COLOR_ORDER>(leds, 0, NUM_LEDS_STRIP_A);
-	FastLED.addLeds<LED_TYPE, DATA_PIN_B, COLOR_ORDER>(leds, NUM_LEDS_STRIP_A, NUM_LEDS_STRIP_B);
+	FastLED.addLeds<LED_TYPE_A, DATA_PIN_A, COLOR_ORDER_A>(leds, 0, NUM_LEDS_STRIP_A).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<LED_TYPE_B, DATA_PIN_B, COLOR_ORDER_B>(leds, NUM_LEDS_STRIP_A, NUM_LEDS_STRIP_B).setCorrection(TypicalLEDStrip);
 	#else		
-	FastLED.addLeds<LED_TYPE, DATA_PIN_A, COLOR_ORDER>(leds, NUM_LEDS);
+	FastLED.addLeds<LED_TYPE_A, DATA_PIN_A, COLOR_ORDER_A>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 	#endif
 	#endif
 
 	FastLED.setDither(true);
-	FastLED.setCorrection(TypicalLEDStrip);
 	FastLED.setBrightness(brightness);
 	FastLED.setMaxPowerInVoltsAndMilliamps(VOLTAGE, MILLI_AMPS);
 	fill_solid(leds, NUM_LEDS, CRGB::Black);
