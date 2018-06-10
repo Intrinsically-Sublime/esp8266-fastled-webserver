@@ -144,6 +144,7 @@ Features
 * Adjust the color
 * Change color palettes
 * Adjust individual pattern parameters
+* Button control
 
 ToDo
 --------
@@ -153,6 +154,27 @@ ToDo
 * Save settings in array to allow each pattern to have their own settings
 * Add reset for settings to default
 * Add Audio analyzer On/Off button control
+
+Buttons
+--------
+```
+ 0 = Short press, 1 = Long press, 2 = Extra long press 7s+
+
+                 UP
+                 0 = Brightness++
+                 1 = Speed++
+                 2 = WiFi on/off
+
+ LEFT            CENTER            RIGHT
+ 0 = Pattern--   0 = Text on/off   0 = Pattern++
+ 1 = Color/Pal-- 1 = Audio on/off  1 = Color/Pal++
+ 2 = Autoplay    2 = Unassigned    2 = LEDs on/off
+
+                 DOWN
+                 0 = Brightness--
+                 1 = Speed--
+                 2 = Unassigned
+```
 
 Hardware
 --------

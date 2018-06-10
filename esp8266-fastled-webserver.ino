@@ -60,50 +60,22 @@ bool enableWiFi = true;
 
 #include "FSBrowser.h"
 
-// Define controller being used (Novel Mutations Costume Controllers CC2, CC4P)
-#define			CC4P	// ESP-12 based with MSGEQ7 and 5 button D pad and 4 way parallel output
-//#define			CC2	// ESP-01 based with 2 button input and 2 outputs
+////// External profiles. Allows separate profiles for each device. See Profile.h for all options. ///////
 
-#define DEVICE_NAME 		"Test"
-//#define REVERSE_ORDER			// Uncomment to have the patterns run in reverse direction (for a limited number of patterns)
+//#include "Profile.h"				// Full profile with all possible options.
 
-// CC2 Specific Settings
-#ifdef CC2
-#define DATA_PIN_A		1
-#define LED_TYPE_A		WS2812B
-#define COLOR_ORDER_A		GRB
+#include "ExampleCC4Profile.h"		// Example minimal CC4P profile.
+//#include "ExampleCC2Profile.h"		// Example minimal CC2 profile.
+//#include "ExampleIrregularCC4Profile.h"	// Example irregular CC4P profile.
 
-// Second output settings. Leave commented unless you are using it.
-//#define DATA_PIN_B		3	// Uncomment to use the second output. NOT PARALLEL OUTPUT
-#define LED_TYPE_B		WS2812B	// Only used if DATA_PIN_B is defined
-#define COLOR_ORDER_B		GRB	// Only used if DATA_PIN_B is defined
-#define NUM_LEDS_STRIP_A	50	// Only used if DATA_PIN_B is defined
-#define NUM_LEDS_STRIP_B	50	// Only used if DATA_PIN_B is defined
-#endif
-
-// CC4P Specific Settings
-#ifdef CC4P
-#define PARALLEL_OUTPUT		// Uncommented = Parallel output on WS2813_PORTA. Commented = Sequential output on pins 12,13,14,15
-#define NUM_LEDS_PER_STRIP	150
-#define NUM_STRIPS		4
-#endif
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////// All animation functions mapped through XY(x,y) function. ///////////////////////////
-///////////////////////// Replace with custom XY map for irregular Matrix. ///////////////////////////////
-/// To generate irregular Matrix see https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/ ///
 
-#define MATRIX_WIDTH		24	// Column count ( widest horizontal width for irregular matrix )
-#define MATRIX_HEIGHT		25	// Row count ( tallest vertical height for irregular matrix )
-//#define CYLINDRICAL_MATRIX		// Uncomment if your matrix wraps around in a cylinder
+#ifndef IRREGULAR_MATRIX
+	#define NUM_LEDS	MATRIX_WIDTH*MATRIX_HEIGHT	// Should be equal to visible LEDs
 
-//#define SERPENTINE			// Uncomment for ZigZag/Serpentine wiring (Not used with irregular matrix)
-//#define HORIZONTAL			// Uncomment for Horizontal wiring (Not used with irregular matrix)
-//#define MIRROR_WIDTH			// Mirrors the output horizontally (Not used with irregular matrix)
-//#define MIRROR_HEIGHT			// Mirrors the output vertically (Not used with irregular matrix)
-
-#define NUM_LEDS	MATRIX_WIDTH*MATRIX_HEIGHT	// Should be equal to visible LEDs
-
-CRGB leds[NUM_LEDS+1];	// One extra pixel for hiding out of bounds data
+	CRGB leds[NUM_LEDS+1];	// One extra pixel for hiding out of bounds data
+#endif
 
 int wrapX(int x) {	// Used by XY function and tempMatrix buffer
 	#ifdef CYLINDRICAL_MATRIX
@@ -115,43 +87,49 @@ int wrapX(int x) {	// Used by XY function and tempMatrix buffer
 			return x;
 		}
 	#else
+		if (x < 0 ) return 0;
+		if (x >= MATRIX_WIDTH) return MATRIX_WIDTH-1;
 		return x;
 	#endif
 }
 
 int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 
-	// Wrap X around for use on cylinders
-	if (wrap) { x = wrapX(x); }
+	#ifdef CYLINDRICAL_MATRIX
+		// Wrap X around for use on cylinders
+		if (wrap) { x = wrapX(x); }
+	#endif
 
 	// map anything outside of the matrix to the extra hidden pixel
 	if (y >= MATRIX_HEIGHT || x >= MATRIX_WIDTH) { return NUM_LEDS; }
 
 	#ifdef MIRROR_WIDTH
-	x = (MATRIX_WIDTH - 1) - x;
+		x = (MATRIX_WIDTH - 1) - x;
 	#endif
 
 	#ifdef MIRROR_HEIGHT
-	y = (MATRIX_HEIGHT - 1) - y;
+		y = (MATRIX_HEIGHT - 1) - y;
 	#endif
 
 	#ifdef HORIZONTAL
-	uint8_t xx = x;
-	x = y;
-	y = xx;
-	#define XorY MATRIX_WIDTH
+		uint8_t xx = x;
+		x = y;
+		y = xx;
+		#define XorY MATRIX_WIDTH
 	#else
-	#define XorY MATRIX_HEIGHT
+		#define XorY MATRIX_HEIGHT
 	#endif
 
 	#ifdef SERPENTINE
-	if(x%2 == 0) {
-		return (x * XorY) + y;
-	} else {
-		return (x * XorY) + ((XorY - 1) - y);
-	}
+		if(x%2 == 0) {
+			return (x * XorY) + y;
+		} else {
+			return (x * XorY) + ((XorY - 1) - y);
+		}
+	#elif defined IRREGULAR_MATRIX
+		return XYTable[(y * MATRIX_WIDTH) + x];
 	#else
-	return (x * XorY) + y;
+		return (x * XorY) + y;
 	#endif
 }
 
@@ -171,11 +149,14 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 #define VOLTAGE		   4.2		//Set voltage used 4.2v for Lipo or 5v for 5V power supply or USB battery bank
 #define WIFI_MAX_POWER     1		//Set wifi output power between 0 and 20.5db (default around 19db)
 
+#define CENTER_LED    NUM_LEDS / 2
+
 #if MATRIX_HEIGHT >= 4 && MATRIX_WIDTH >= 4
-#define MATRIX_2D
+	#define MATRIX_2D
 #endif
+
 #if MATRIX_HEIGHT >= 5 && MATRIX_WIDTH >= 3
-#define TEXT_MATRIX
+	#define TEXT_MATRIX
 #endif
 
 // The 32bit version of our coordinates
@@ -317,19 +298,22 @@ typedef PatternAndName PatternAndNameList[];
 
 #include "TwinkleFOX.h"
 #ifdef MATRIX_2D
-//#include "FireWorks.h"  	// Fireworks or Fireworks2
-#include "FireWorks2.h" 	// Fireworks or Fireworks2
+	//#include "FireWorks.h"  	// Fireworks or Fireworks2
+	#include "FireWorks2.h" 	// Fireworks or Fireworks2
 #endif
 
 #ifdef MATRIX_2D
-#define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
-#define RAIN_POSITION 2		// Used to keep track of where rain is in the pattern list
-#define STORM_POSITION 3	// Used to keep track of where storm is in the pattern list
-#define TWINKLE_POSITION 14	// Used to keep track of where twinkle is in the pattern list
-#define SOLID_POSITION 15	// Used to keep track of where solid is in the pattern list
+	#define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
+	#define RAIN_POSITION 2		// Used to keep track of where rain is in the pattern list
+	#define STORM_POSITION 3	// Used to keep track of where storm is in the pattern list
+	#define TWINKLE_POSITION 14	// Used to keep track of where twinkle is in the pattern list
+	#define SOLID_POSITION 15	// Used to keep track of where solid is in the pattern list
 #else
-#define TWINKLE_POSITION 10	// Used to keep track of where twinkle is in the pattern list
-#define SOLID_POSITION 11	// Used to keep track of where solid is in the pattern list
+	#define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
+	#define RAIN_POSITION 99	// Unused
+	#define STORM_POSITION 99	// Unused
+	#define TWINKLE_POSITION 10	// Used to keep track of where twinkle is in the pattern list
+	#define SOLID_POSITION 11	// Used to keep track of where solid is in the pattern list
 #endif
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
@@ -359,7 +343,9 @@ PatternAndNameList patterns = {
 const uint8_t patternCount = ARRAY_SIZE(patterns);
 
 #include "Fields.h"
+#ifndef DISABLE_BUTTONS
 #include "Buttons.h"
+#endif
 
 void setup() {
 	delay(2000);
@@ -373,10 +359,10 @@ void setup() {
 	#ifdef PARALLEL_OUTPUT
 	FastLED.addLeds<WS2813_PORTA,NUM_STRIPS>(leds, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 	#else
-	FastLED.addLeds<WS2813,13,GRB>(leds, 0, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-	FastLED.addLeds<WS2813,14,GRB>(leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-	FastLED.addLeds<WS2813,15,GRB>(leds, 2*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-	FastLED.addLeds<WS2813,12,GRB>(leds, 3*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<WS2813,12,GRB>(leds, 0, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<WS2813,13,GRB>(leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<WS2813,14,GRB>(leds, 2*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<WS2813,15,GRB>(leds, 3*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 	#endif
 	#endif
 
@@ -384,6 +370,8 @@ void setup() {
 	#ifdef DATA_PIN_B
 	FastLED.addLeds<LED_TYPE_A, DATA_PIN_A, COLOR_ORDER_A>(leds, 0, NUM_LEDS_STRIP_A).setCorrection(TypicalLEDStrip);
 	FastLED.addLeds<LED_TYPE_B, DATA_PIN_B, COLOR_ORDER_B>(leds, NUM_LEDS_STRIP_A, NUM_LEDS_STRIP_B).setCorrection(TypicalLEDStrip);
+//	FastLED.addLeds<LED_TYPE_A, DATA_PIN_A, COLOR_ORDER_A>(leds, 0, NUM_LEDS_STRIP_A).setCorrection(CRGB(215,172,70));
+//	FastLED.addLeds<LED_TYPE_B, DATA_PIN_B, COLOR_ORDER_B>(leds, NUM_LEDS_STRIP_A, NUM_LEDS_STRIP_B).setCorrection(CRGB(255,255,160));
 	#else		
 	FastLED.addLeds<LED_TYPE_A, DATA_PIN_A, COLOR_ORDER_A>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 	#endif
@@ -430,7 +418,9 @@ void setup() {
 
 	setupWebserver();
 
+#ifndef DISABLE_BUTTONS
 	setupButtons();
+#endif
 
 	autoPlayTimeout = millis() + (autoplayDuration * 1000);
 
@@ -747,13 +737,15 @@ void loop() {
 	webSocketsServer.loop();
 	webServer.handleClient();
 
+#ifndef DISABLE_BUTTONS
 	// Read Buttons
 	EVERY_N_MILLISECONDS(BUTTON_CHECK_INTERVAL) {
 		readButtons();
 	}
+#endif
 
 	// Only write to EEPROM every N minutes and only when data has been changed to prevent wear on the EEPROM
-	EVERY_N_MINUTES(5) {
+	EVERY_N_MINUTES(3) {
 		if (eepromChanged) {
 			EEPROM.commit();
 			eepromChanged = false;
@@ -1108,7 +1100,6 @@ void setBrightness(uint8_t value)
 }
 
 ////////////////////////////////////// Animation Functions ////////////////////////////////////////
-/////////////////////// All of these should work with irregular Matrices //////////////////////////
 
 void showSolidColor()
 {
@@ -1280,7 +1271,7 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
 		// Step 6. Add clouds if called for
 		if (clouds) {
 			uint16_t noiseScale = 250;	// A value of 1 will be so zoomed in, you'll mostly see solid colors. A value of 4011 will be very zoomed out and shimmery
-			const uint8_t cloudHeight = (MATRIX_HEIGHT*0.2)+1;
+			const uint8_t cloudHeight = (MATRIX_HEIGHT*0.16)+1;
 			// This is the array that we keep our computed noise values in
 			static uint8_t noise[MATRIX_WIDTH][cloudHeight];
 			int xoffset = noiseScale * x + gHue;
