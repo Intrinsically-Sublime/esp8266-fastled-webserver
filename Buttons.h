@@ -24,11 +24,12 @@
 #ifdef CC2
 #define BUTTON_COUNT 2
 const uint8_t buttonPins[BUTTON_COUNT] { 0,2 };
-#endif
-
-#ifdef CC4P
+#elif defined CC4P
 #define BUTTON_COUNT 5
-const uint8_t buttonPins[BUTTON_COUNT] { 4,0,3,1,2 };	// Up, Right, Down, Left, Center
+const uint8_t buttonPins[BUTTON_COUNT] { 4,0,3,1,2 };	// Up, Right, Down, Left, Center (Header at top)
+#else
+#define BUTTON_COUNT 0
+const uint8_t buttonPins[BUTTON_COUNT] { };
 #endif
 
 #define BUTTON_HOLD_TIME 1000			// Duration of a long click (ms)
@@ -64,7 +65,7 @@ void setupButtons() {
 void processButtonPress(uint8_t b, uint8_t pressDuration)
 {
 	switch(b) {
-		case 0:	// CC4P = Up, CC2 = Top
+		case 0:	// CC4P = Up, CC2 = Left (1)
 			if(pressDuration == 0) {	// Brightness++
 				adjustBrightness(true);
 			} else if(pressDuration == 1) {	// Speed++
@@ -73,13 +74,17 @@ void processButtonPress(uint8_t b, uint8_t pressDuration)
 				setWiFi();
 			}
 		break;
-		case 1:	// CC4P = Right, CC2 = Bottom
+		case 1:	// CC4P = Right, CC2 = Right (2)
 			if(pressDuration == 0) {	// Pattern++
 				adjustPattern(true);
 			} else if(pressDuration == 1) {	// Palette++
 				rotateColor(true);
-			} else if(pressDuration == 2) {	// LEDs On/Off
+			} else if(pressDuration == 2) {
+				#ifdef CC2 		// Autoplay
+				setAutoplay(!autoplay);
+				#else			// LEDs On/Off
 				setPower(!power);
+				#endif
 			}
 		break;
 		case 2:	// CC4P = Down

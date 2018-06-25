@@ -1,6 +1,7 @@
 /*
- * ESP8266 + FastLED + IR Remote: https://github.com/jasoncoon/esp8266-fastled-webserver
- * Copyright (C) 2015-2016 Jason Coon
+ * Novel Mutations Costume Controller Firmware https://github.com/Intrinsically-Sublime/esp8266-fastled-webserver 2018
+ *
+ * Forked from ESP8266 + FastLED + IR Remote: https://github.com/jasoncoon/esp8266-fastled-webserver 2015-2016 Jason Coon
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +18,13 @@
  */
 
 //#define FASTLED_ALLOW_INTERRUPTS 0
-//#define FASTLED_INTERRUPT_RETRY_COUNT 0
+#define FASTLED_INTERRUPT_RETRY_COUNT 0
 
 #define FASTLED_INTERNAL
 #include <FastLED.h>
 FASTLED_USING_NAMESPACE
+
+//#define SERIAL_OUTPUT		// Uncomment to enable serial output. Useful for debugging
 
 extern "C" {
 #include "user_interface.h"
@@ -38,13 +41,12 @@ extern "C" {
 #include "Field.h"
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
+#define PROGMEM   ICACHE_RODATA_ATTR	// ESP PROGMEM Macro
 
 // True = Access point mode (direct connection to ESP8266)
 // False = Station mode (connects to existing network)
 // IPAddress = 192.168.4.1
 const bool apMode = true;
-
-//#define SERIAL_OUTPUT			// Uncomment to enable serial output. Useful for debugging
 
 ESP8266WebServer webServer(80);
 WebSocketsServer webSocketsServer = WebSocketsServer(81);
@@ -56,26 +58,26 @@ const char WiFiAPPSK[] = "";
 // Wi-Fi network to connect to (if not in AP mode)
 const char* ssid = "";
 const char* password = "";
-bool enableWiFi = true;
+bool enableWiFi = false;	// Default is to disable WiFi on startup to preserve battery
 
 #include "FSBrowser.h"
 
 ////// External profiles. Allows separate profiles for each device. See Profile.h for all options. ///////
 
-//#include "Profile.h"				// Full profile with all possible options.
+//#include "profiles/Profile.h"			// Full profile with all possible options.
 
-#include "ExampleCC4Profile.h"		// Example minimal CC4P profile.
-//#include "ExampleCC2Profile.h"		// Example minimal CC2 profile.
-//#include "ExampleIrregularCC4Profile.h"	// Example irregular CC4P profile.
+#include "profiles/ExampleCC4Profile.h"	// Example minimal CC4P profile.
+//#include "profiles/ExampleCC2Profile.h"	// Example minimal CC2 profile.
+//#include "profiles/IrregularCC4Profile.h"	// Example irregular CC4P profile.
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////// All animation functions mapped through XY(x,y) function. ///////////////////////////
 
-#ifndef IRREGULAR_MATRIX
-	#define NUM_LEDS	MATRIX_WIDTH*MATRIX_HEIGHT	// Should be equal to visible LEDs
-
-	CRGB leds[NUM_LEDS+1];	// One extra pixel for hiding out of bounds data
+#ifndef NUM_LEDS
+#define NUM_LEDS	MATRIX_WIDTH*MATRIX_HEIGHT	// Should be equal to visible LEDs
 #endif
+
+CRGB leds[NUM_LEDS+1];	// One extra pixel for hiding out of bounds data
 
 int wrapX(int x) {	// Used by XY function and tempMatrix buffer
 	#ifdef CYLINDRICAL_MATRIX
@@ -107,7 +109,7 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 		x = (MATRIX_WIDTH - 1) - x;
 	#endif
 
-	#ifdef MIRROR_HEIGHT
+	#ifndef MIRROR_HEIGHT	// Default is to mirror the height to be compatible with irregular matrix array that is read from the top left corner
 		y = (MATRIX_HEIGHT - 1) - y;
 	#endif
 
@@ -127,7 +129,11 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 			return (x * XorY) + ((XorY - 1) - y);
 		}
 	#elif defined IRREGULAR_MATRIX
-		return XYTable[(y * MATRIX_WIDTH) + x];
+		#if NUM_LEDS < 256
+			return pgm_read_byte(XYTable + ((y * MATRIX_WIDTH) + x));
+		#else
+			return pgm_read_word(XYTable + ((y * MATRIX_WIDTH) + x));
+		#endif
 	#else
 		return (x * XorY) + y;
 	#endif
@@ -172,9 +178,9 @@ uint_fast16_t tempMatrix[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
 // Temporary CRGB array for storing RGB data for one column to be duplicated.
 CRGB tempHeightStrip[MATRIX_HEIGHT];
 
-const uint8_t brightnessMap[] = { 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128, 160, 192, 255 };
+const uint8_t brightnessMap[] = { 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128, 160, 192 };
 const uint8_t brightnessCount = ARRAY_SIZE(brightnessMap);
-uint8_t brightnessIndex = 15;
+uint8_t brightnessIndex = 14;	// 14 = 128
 
 // ten seconds per color palette makes a good demo
 // 20-120 is better for deployment
@@ -206,6 +212,8 @@ uint8_t gCurrentPaletteNumber = 0;
 
 CRGBPalette16 gCurrentPalette( CRGB::Black);
 CRGBPalette16 gTargetPalette( gGradientPalettes[0] );
+
+extern const CRGBPalette16 twinklePalettes[];
 
 const CRGBPalette16 WoodFireColors_p = CRGBPalette16(CRGB::Black, CRGB::OrangeRed, CRGB::Orange, CRGB::Gold);		//* Orange
 const CRGBPalette16 SodiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::Orange, CRGB::Gold, CRGB::Goldenrod);		//* Yellow
@@ -357,12 +365,12 @@ void setup() {
 
 	#ifdef CC4P
 	#ifdef PARALLEL_OUTPUT
-	FastLED.addLeds<WS2813_PORTA,NUM_STRIPS>(leds, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<PARALLEL_LED_TYPE,NUM_STRIPS>(leds, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 	#else
-	FastLED.addLeds<WS2813,12,GRB>(leds, 0, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-	FastLED.addLeds<WS2813,13,GRB>(leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-	FastLED.addLeds<WS2813,14,GRB>(leds, 2*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
-	FastLED.addLeds<WS2813,15,GRB>(leds, 3*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<SEQUENTIAL_LED_TYPE,12,GRB>(leds, 0, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<SEQUENTIAL_LED_TYPE,13,GRB>(leds, NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<SEQUENTIAL_LED_TYPE,14,GRB>(leds, 2*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
+	FastLED.addLeds<SEQUENTIAL_LED_TYPE,15,GRB>(leds, 3*NUM_LEDS_PER_STRIP, NUM_LEDS_PER_STRIP).setCorrection(TypicalLEDStrip);
 	#endif
 	#endif
 
@@ -418,6 +426,11 @@ void setup() {
 
 	setupWebserver();
 
+	if (!enableWiFi) {	// Disable WiFi at startup to preserve battery
+		disableWiFi();
+		indicatorLEDs(CRGB::Red);
+	}
+
 #ifndef DISABLE_BUTTONS
 	setupButtons();
 #endif
@@ -430,38 +443,37 @@ void setup() {
 	noiseZ = random16();
 }
 
-void setWiFi()
+void indicatorLEDs(CRGB color)
 {
-	if (enableWiFi) {
-		disableWiFi();
-	} else {
-		setupWiFi();
-	}
-
 	#if NUM_LEDS > 10
 	#define INDICATOR_LEDS 10
 	#else
 	#define INDICATOR_LEDS NUM_LEDS
 	#endif
 
-	CRGB color;
-
-	if (enableWiFi) {
-		color = CRGB::Blue;
-	} else {
-		color = CRGB::Red;
-	}
-
 	fill_solid(leds, INDICATOR_LEDS, CRGB::Black);
 	for (uint8_t i = INDICATOR_LEDS; i > 0; i--) {
 		leds[i] = color;
 		FastLED.show();
-		FastLED.delay(50);
+		FastLED.delay(500/INDICATOR_LEDS);
 	}
 	for (uint8_t i = INDICATOR_LEDS; i > 0; i--) {
 		leds[i] = CRGB::Black;
 		FastLED.show();
-		FastLED.delay(50);
+		FastLED.delay(500/INDICATOR_LEDS);
+	}
+}
+
+void setWiFi()
+{
+	if (enableWiFi) {
+		disableWiFi();
+		indicatorLEDs(CRGB::Red);
+		enableWiFi = false;
+	} else {
+		setupWiFi();
+		indicatorLEDs(CRGB::Blue);
+		enableWiFi = true;
 	}
 }
 
@@ -471,14 +483,13 @@ void disableWiFi()
 	WiFi.mode(WIFI_OFF);
 	WiFi.forceSleepBegin();
 	delay(1);
-	enableWiFi = false;
 }
 
 void setupWiFi() 
 {
 	//Set wifi output power between 0 and 20.5db (default around 19db)
 	WiFi.setOutputPower(WIFI_MAX_POWER);
-//	WiFi.setSleepMode(WIFI_NONE_SLEEP);
+	WiFi.setSleepMode(WIFI_NONE_SLEEP);
 
 	if (apMode) {
 		WiFi.mode(WIFI_AP);
@@ -530,7 +541,6 @@ void setupWiFi()
 		}
 		#endif
 	}
-	enableWiFi = true;
 }
 
 void setupWebserver()
@@ -731,18 +741,23 @@ void broadcastString(String name, String value)
 }
 
 void loop() {
+	// Keeps framerate below 250fps giving time for the server to serve pages when a low number of LEDs are used along with audio analyzer.
+	#if NUM_LEDS_PER_STRIP < 130 && defined CC4P
+	FastLED.delay(6-(NUM_LEDS_PER_STRIP*0.03));
+	#endif
+
 	random16_add_entropy(analogRead(random8()));
 
 //	dnsServer.processNextRequest();
 	webSocketsServer.loop();
 	webServer.handleClient();
 
-#ifndef DISABLE_BUTTONS
+	#ifndef DISABLE_BUTTONS
 	// Read Buttons
 	EVERY_N_MILLISECONDS(BUTTON_CHECK_INTERVAL) {
 		readButtons();
 	}
-#endif
+	#endif
 
 	// Only write to EEPROM every N minutes and only when data has been changed to prevent wear on the EEPROM
 	EVERY_N_MINUTES(3) {
@@ -784,6 +799,9 @@ void loop() {
 
 	if (autoplay && (millis() > autoPlayTimeout)) {
 		adjustPattern(true);
+		if (currentPatternIndex == SOLID_POSITION) { // Skip the solid color when in autoplay
+			adjustPattern(true);
+		}
 		autoRotatePalettes();
 		autoPlayTimeout = millis() + (autoplayDuration * 1000);
 	}
@@ -887,6 +905,12 @@ void setAutoplay(uint8_t value)
 	eepromChanged = true;
 
 	broadcastInt("autoplay", autoplay);
+
+	if (autoplay) {
+		indicatorLEDs(CRGB::Green);
+	} else {
+		indicatorLEDs(CRGB::Pink);
+	}
 }
 
 void setAutoplayDuration(uint8_t value)

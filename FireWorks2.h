@@ -181,7 +181,7 @@ void fireworks()
 	CRGB sky2(2,2,2);				// Alternate sky color to create a star twinkle effect 
 
 	for( uint8_t h = 0; h < MATRIX_WIDTH; h++) {	// All leds will be set to 'sky1' (very dark blue) 
-		for( int v = 0; v < MATRIX_HEIGHT; v++) {
+		for( uint8_t v = 0; v < MATRIX_HEIGHT; v++) {
 			leds[XY(h,v)] = sky1;
 		}
 	}
@@ -200,7 +200,7 @@ void fireworks()
 		}
 	}
 
-	for( int a = 0; a < MAX_SHELLS; a++) {		// Always moves and draws the MAX number of sparks not the actual number of sparks (Wasteful!?)
+	for( uint8_t a = 0; a < MAX_SHELLS; a++) {		// Always moves and draws the MAX number of sparks not the actual number of sparks (Wasteful!?)
 		if(re_launchcountdown == 0) {
 			if(gDot[a].show == 0) {
 				if(launchcountdown == 0) {
@@ -227,8 +227,8 @@ void fireworks()
 			hsv2rgb_rainbow( CHSV( random8(), 255, random8(64,254)), gBurstcolor);
 			gBurstx = gDot[a].x;
 			gBursty = gDot[a].y;
-			int nsparks = random8(MIN_SPARKS, MAX_SPARKS+1);
-			for( int b = 0; b < nsparks; b++) {
+			uint8_t nsparks = random8(MIN_SPARKS, MAX_SPARKS+1);
+			for( uint8_t b = 0; b < nsparks; b++) {
 				gSparks[a][b].Skyburst( gBurstx, gBursty, gBurstcolor);
 			}
 			gDot[a].theType = SPARK;
@@ -237,7 +237,7 @@ void fireworks()
 		gDot[a].Move();					// Calculate the next position of the dots 
 		gDot[a].Draw();					// Scale the position of the shell on the LED matrix 
 
-		for( int b = 0; b < MAX_SPARKS; b++) {		// Always moves and draws the MAX number of sparks not the actual number of sparks (Wasteful!?)
+		for( uint8_t b = 0; b < MAX_SPARKS; b++) {		// Always moves and draws the MAX number of sparks not the actual number of sparks (Wasteful!?)
 			gSparks[a][b].Move();
 			gSparks[a][b].color.r = gSparks[a][b].color.r * 255 /256;
 			gSparks[a][b].color.g = gSparks[a][b].color.g * 255 /256;
