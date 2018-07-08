@@ -1,0 +1,61 @@
+
+//// Pattern list for 2D matrix of 4x4 or greater
+//// CC2 WITHOUT Audio analyzer
+//// CC4P WITH Audio analyzer
+
+//0 	CC2	{ fireBasic,			"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
+//0	CC4P	{ fireAudio,			"Audio Activated Fire -- Uses Fire Palettes, Speed" },
+//1		{ fireworks,			"Fireworks -- Uses Speed" },
+//2		{ coloredRain,			"Rain -- Uses Speed, Intensity, Color Picker" },
+//3		{ stormyRain,			"Storm -- Uses Speed, Intensity, Color Picker" },
+//4		{ theMatrix,			"The Matrix -- Uses Speed, Intensity" },
+//5		{ pride,			"Pride -- Uses Speed" },
+//6		{ rainbow,			"Rainbow" },
+//7		{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
+//8		{ rainbowSolid,			"Solid Rainbow -- Uses General Palettes" },
+//9		{ colorWaves,			"Color Waves" },
+//10		{ confetti,			"Confetti -- Uses General Palettes" },
+//11		{ sinelon,			"Sinelon -- Uses General Palettes, Speed" },
+//12		{ bpm,				"Beat -- Uses General Palettes, Speed" },
+//13		{ juggle,			"Juggle -- Uses Speed" },
+//14		{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Speed, Intensity" },
+//15		{ showSolidColor,		"Solid Color -- Uses Color Picker" },
+//16	CC4P	{ spectrumWaves,		"Spectrum Waves" },		// Good (center radiating toward ends)
+//17	CC4P	{ spectrumPaletteWaves,		"Spectrum Palette Waves" },	// Good (center flows towards ends)
+//18	CC4P	{ spectrumPaletteWaves2,	"Spectrum Palette Waves 2" },	// OK (center radiating outwards)
+//19	CC4P	{ spectrumWaves2,		"Spectrum Waves 2" },		// Good (center radiating toward ends)
+//20	CC4P	{ spectrumWaves3,		"Spectrum Waves 3" },		// Good (center radiating toward ends)
+//21	CC4P	{ drawVU,			"VU" },				// OK (ends radiating toward center)
+//22	CC4P	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
+//23	CC4P	{ beatWaves,			"BeatWaves" }			// Good (center radiating toward ends)
+
+//// Pattern list for use with CC2 on strip or matrix of LESS THAN 4x4
+//// Pattern list for use with CC4P with Audio patterns on strip or matrix of LESS THAN 4x4
+
+//// Pattern list for strip or matrix of LESS THAN 4x4
+//// CC2 WITHOUT Audio analyzer
+//// CC4P WITH Audio analyzer
+
+//0 	CC2	{ fireBasic,			"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
+//0	CC4P	{ fireAudio,			"Audio Activated Fire -- Uses Fire Palettes, Speed" },
+//1		{ pride,			"Pride -- Uses Speed" },
+//2		{ rainbow,			"Rainbow" },
+//3		{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
+//4		{ rainbowSolid,			"Solid Rainbow -- Uses General Palettes" },
+//5		{ colorWaves,			"Color Waves" },
+//6		{ confetti,			"Confetti -- Uses General Palettes" },
+//7		{ sinelon,			"Sinelon -- Uses General Palettes, Speed" },
+//8		{ bpm,				"Beat -- Uses General Palettes, Speed" },
+//9		{ juggle,			"Juggle -- Uses Speed" },
+//10		{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Speed, Intensity" },
+//11		{ showSolidColor,		"Solid Color -- Uses Color Picker" },
+//12	CC4P	{ spectrumWaves,		"Spectrum Waves" },		// Good (center radiating toward ends)
+//13	CC4P	{ spectrumPaletteWaves,		"Spectrum Palette Waves" },	// Good (center flows towards ends)
+//14	CC4P	{ spectrumPaletteWaves2,	"Spectrum Palette Waves 2" },	// OK (center radiating outwards)
+//15	CC4P	{ spectrumWaves2,		"Spectrum Waves 2" },		// Good (center radiating toward ends)
+//16	CC4P	{ spectrumWaves3,		"Spectrum Waves 3" },		// Good (center radiating toward ends)
+//17	CC4P	{ drawVU,			"VU" },				// OK (ends radiating toward center)
+//18	CC4P	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
+//19	CC4P	{ beatWaves,			"BeatWaves" }			// Good (center radiating toward ends)
+
+

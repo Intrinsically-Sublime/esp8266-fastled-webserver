@@ -1,7 +1,7 @@
 FastLED + ESP8266 Web Server
 =========
 
-### Custom version of Jason Coons FastLED webserver for Novel Mutations Costume Controllers (LiPo battery powered ESP8266 based boards with MSGEQ7 and Microphone)
+### Custom version of Jason Coons FastLED webserver for Novel Mutations Costume Controllers (Battery powered ESP8266 based boards with MSGEQ7 and Microphone)
 It will work with any ESP8266 based controller.
 
 #### Some of the changes from original version by Jason Coon.
@@ -22,6 +22,7 @@ It will work with any ESP8266 based controller.
 15) Added blending to fire to smooth the animation.
 16) Physical button control. Up to 5 buttons and 15 function calls (Pattern+/-, Palette/Color+/-, Speed+/-, Brightness+/-, Power, Autoplay on/off, ~~WiFI on/off~~, ~~Audio on/off~~, ~~Scrolling Text on/off~~, ~~Unassigned~~, ~~Unassigned~~). The first 2 buttons are enough to control most features.
 17) Intensity slider to control rain intensity and twinkle density.
+18) Custom playlist option for autoplay.
 
 #### Custom irregular XY map generator based on Garrett Maces
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
@@ -31,8 +32,8 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Settings
   * Fire Palettes -- See Palettes section below
   * Speed -- Adjusts the speed the heat travels upwards
-  * Cooling -- Adjusts the rate at which the heat cells cools
-  * Sparking --  Adjusts the frequency of new embers
+  * Cooling -- Adjusts the rate at which the heat cells cools (controlled by Audio on CC4P)
+  * Sparking --  Adjusts the frequency of new embers (controlled by Audio on CC4P)
 ---
 ##### Fireworks -- Random fireworks on 2D matrix
 * Settings
@@ -109,32 +110,32 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
     * Rotating -- ↻
 ---
 * General Palettes
-  * Rainbow -- Full spectrum
-  * Rainbow Stripe -- Full spectrum with black stripes
-  * Cloud -- Pale blues and whites
-  * Lava -- Dark reds and black
-  * Ocean -- Blues and greens
-  * Forest -- Greens and yellows
-  * Party -- Bright happy colors
-  * Heat -- Reds, yellows and whites
+    * Rainbow -- Full spectrum
+    * Rainbow Stripe -- Full spectrum with black stripes
+    * Cloud -- Pale blues and whites
+    * Lava -- Dark reds and black
+    * Ocean -- Blues and greens
+    * Forest -- Greens and yellows
+    * Party -- Bright happy colors
+    * Heat -- Reds, yellows and whites
 ---
 * TwinkleFOX Palettes
-  * Incandescent Twinkles
-  * Red & White Twinkles
-  * Blue & White Twinkles
-  * Red, Green & White Twinkles
-  * Fairy Light Twinkles
-  * Snow 2 Twinkles
-  * Holly Twinkles
-  * Ice Twinkles
-  * Party Twinkles
-  * Forest Twinkles
-  * Lava Twinkles
-  * Fire Twinkles
-  * Cloud 2 Twinkles
-  * Ocean Twinkles
-  * Rainbow Twinkles
-  * Retro C9 Twinkles
+    * Incandescent Twinkles
+    * Red & White Twinkles
+    * Blue & White Twinkles
+    * Red, Green & White Twinkles
+    * Fairy Light Twinkles
+    * Snow 2 Twinkles
+    * Holly Twinkles
+    * Ice Twinkles
+    * Party Twinkles
+    * Forest Twinkles
+    * Lava Twinkles
+    * Fire Twinkles
+    * Cloud 2 Twinkles
+    * Ocean Twinkles
+    * Rainbow Twinkles
+    * Retro C9 Twinkles
 
 Features
 --------
@@ -148,12 +149,10 @@ Features
 
 ToDo
 --------
-* Add MSGEQ7 patterns for XY matrix
 * Add bleeding patterns
 * Add scrolling text with input via web interface
 * Save settings in array to allow each pattern to have their own settings
 * Add reset for settings to default
-* Add Audio analyzer On/Off button control
 
 Buttons
 --------

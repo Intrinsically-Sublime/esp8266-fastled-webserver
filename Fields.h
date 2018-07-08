@@ -17,7 +17,7 @@
 */
 
 uint8_t power = 1;
-uint8_t brightness = brightnessMap[brightnessIndex];
+uint8_t brightness = pgm_read_byte(brightnessMap + brightnessIndex);
 
 //String setPower(String value) {
 //  power = value.toInt();

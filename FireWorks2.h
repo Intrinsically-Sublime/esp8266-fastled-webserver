@@ -62,12 +62,19 @@ class Dot {
 	}
 
 	void Draw() {
+   
+		if( !show) return;
+
 		fract8 p00, p01, p10, p11;		// percentage of pixel spread to adjacent pixels
     
 		screenscale( x, y, p00, p01, p10, p11);
     
-		uint8_t x_pos = x >> 11;		// Scaling to get x and y pixel positions
-		uint8_t y_pos = y >> 11;
+		uint8_t x_pos = x >> 11;		// Scaling to get x pixel position 0 - 32
+		x_pos = map(x_pos, 0, 32, 0, MATRIX_WIDTH-1);	// Scale to Matrix width
+
+//		uint8_t y_pos = y >> 11;		// Scaling to get y pixel position 0 - 32
+		uint8_t y_pos = y >> 10;		// Scaling to get y pixel position 0 - 64
+		y_pos = map(y_pos, 0, 64, 0, MATRIX_HEIGHT-1);	// Scale to Matrix height
     
    
 		if (yv > 0){				// In case of equal values, just adding 1 or 2 to any pixel's percentage
@@ -86,8 +93,6 @@ class Dot {
 			if (p00 == p10) p00++;
 			if (p01 == p11) p01++;
 		}
-   
-		if( !show) return;
 
 		if ((p00 > p01) && (p00 > p10) && (p00 > p11)) setXY(x_pos, y_pos) += color;
 		if ((p01 > p00) && (p01 > p10) && (p01 > p11)) setXY(x_pos, y_pos + 1) += color;
@@ -105,11 +110,10 @@ class Dot {
 	}                    // End of draw function
 
 	void Move() {
-//		if( !show) return;
-
 //		if(((xv >  0) && (x+xv < xv)) || ((xv < 0) && (x+xv > xv))) show = 0;	// Prevents pixels wraparounds from side to side
 		if(((yv >  0) && (y+yv < yv)))  show = 0;				// Prevents pixels wraparounds from top to bottom
 		if( yv < 0 && (y < (-yv)) ) show = 0;					// If velocity is negative AND we are about to hit the ground 
+		if( !show) return;
 
 		if (theType == EXPLODING) {						// If the Shell has exploded...
 	  
@@ -143,7 +147,8 @@ class Dot {
 	void GroundLaunch() {
 		gGravity = map8(speed, 0, 6)+3;
 
-		yv = ((20*(MATRIX_HEIGHT+(3*(gGravity*0.8))))-(MATRIX_HEIGHT*5)) + random16(MATRIX_HEIGHT*5);	// Vertical velocity = Minimum velocity + Random maximum difference
+		yv = (gGravity*132) + random8();		// Vertical velocity = Minimum velocity + Random maximum difference
+
 		xv = random16(350) - 175;			// Generates a signed int value between +/- 175  (Nice width but always inside of frame)      
 		y = 0;						// Ground launch
 		x = random16(); 				// Horizontal
@@ -165,7 +170,7 @@ class Dot {
 		theType = SPARK;
 		show = 1;
 	}							// End of Skyburst function
-};								// End of Dot class definition
+};								// End of Dot class definition				// End of Dot class definition
 
 #define MAX_SHELLS 6
 #define MIN_SHELLS 2
@@ -195,7 +200,7 @@ void fireworks()
      
 	if(gDot[MAX_SHELLS-1].show == 0) {		// If the last shell has exploded
 		re_launchcountdown--;			// Count down for next re_launch
-		if (re_launchcountdown > 30000) {
+		if (re_launchcountdown > 10000) {
 			re_launchcountdown = 0;
 		}
 	}
@@ -216,7 +221,7 @@ void fireworks()
 		}
 
 		if(gDot[MAX_SHELLS-1].show == 1) {
-			re_launchcountdown = random16(400) + 100;	// Last SHELL has launched, restart the relaunch timer
+			re_launchcountdown = random16(200) + 100;	// Last SHELL has launched, restart the relaunch timer
 		}
 
 	//	if( gDot[a].theType == EXPLODING) {

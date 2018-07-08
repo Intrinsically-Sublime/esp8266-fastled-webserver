@@ -40,3 +40,19 @@
 	#define NUM_LEDS_STRIP_A	50	// Only used if DATA_PIN_B is defined
 	#define NUM_LEDS_STRIP_B	50	// Only used if DATA_PIN_B is defined
 #endif
+
+#define CUSTOM_BUTTONS				// Uncomment to override buttons in buttons.h
+#ifdef CUSTOM_BUTTONS
+	#define BUTTON_COUNT 5
+	const uint8_t buttonPins[BUTTON_COUNT] { 4,0,3,1,2 };	// Up, Right, Down, Left, Center (Header at top)
+//	const uint8_t buttonPins[BUTTON_COUNT] { 3,1,4,0,2 };	// Up, Right, Down, Left, Center (Header at bottom)
+//	const uint8_t buttonPins[BUTTON_COUNT] { 0,3,1,4,2 };	// Up, Right, Down, Left, Center (Header at left)
+//	const uint8_t buttonPins[BUTTON_COUNT] { 1,4,0,3,2 };	// Up, Right, Down, Left, Center (Header at right)
+#endif
+
+
+#define CUSTOM_PLAYLIST				// Uncomment to override autoplay
+const uint8_t playlist[] { 0,9,1,12,3,17,4,22,5,11,2,13,6,14 };	// See PatternList.txt for a detailed list
+const uint8_t playlistCount = ARRAY_SIZE(playlist);
+uint8_t currentPlaylistIndex = 0;		// Index number of which playlist position is current
+

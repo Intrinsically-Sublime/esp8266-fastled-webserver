@@ -58,7 +58,7 @@ const char WiFiAPPSK[] = "";
 // Wi-Fi network to connect to (if not in AP mode)
 const char* ssid = "";
 const char* password = "";
-bool enableWiFi = false;	// Default is to disable WiFi on startup to preserve battery
+#define DISABLE_WIFI_ON_BOOT true	// Default is to disable WiFi on boot to preserve battery (must have button 1 to enable if disabled)
 
 #include "FSBrowser.h"
 
@@ -79,12 +79,12 @@ bool enableWiFi = false;	// Default is to disable WiFi on startup to preserve ba
 
 CRGB leds[NUM_LEDS+1];	// One extra pixel for hiding out of bounds data
 
-int wrapX(int x) {	// Used by XY function and tempMatrix buffer
+int wrapX(int x) {	// Used by XY function and tempMatrix
 	#ifdef CYLINDRICAL_MATRIX
 		if (x >= MATRIX_WIDTH) {
 			return x - MATRIX_WIDTH;
 		} else if (x < 0) {
-			return MATRIX_WIDTH - abs(x);
+			return x + MATRIX_WIDTH;
 		} else {
 			return x;
 		}
@@ -103,7 +103,7 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 	#endif
 
 	// map anything outside of the matrix to the extra hidden pixel
-	if (y >= MATRIX_HEIGHT || x >= MATRIX_WIDTH) { return NUM_LEDS; }
+	if (y >= MATRIX_HEIGHT || x >= MATRIX_WIDTH || x < 0 || y < 0) { return NUM_LEDS; }
 
 	#ifdef MIRROR_WIDTH
 		x = (MATRIX_WIDTH - 1) - x;
@@ -139,15 +139,19 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 	#endif
 }
 
+int getXyFromLedNum(int ledNum) {
+	return XY(ledNum/MATRIX_HEIGHT,ledNum%MATRIX_HEIGHT);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define MATRIX_TOTAL	MATRIX_WIDTH*MATRIX_HEIGHT	// Total size of the LED matrix including any hidden pixels
+const uint16_t matrixTotal = MATRIX_WIDTH * MATRIX_HEIGHT;	// Total size of the LED matrix including any hidden pixels
 
 #if MATRIX_HEIGHT/6 > 6
-	#define FIRE_BASE	6
+	const uint8_t fireBase	= 6;
 #else
-	#define FIRE_BASE	MATRIX_HEIGHT/6+1
+	const uint8_t fireBase = (MATRIX_HEIGHT/6)+1;
 #endif
 
 // For best battery life MILLI_AMPS = NUM_LEDS * 3 (gives poor white) Better white MILLI_AMPS = NUM_LEDS * 9 (poor battery life)
@@ -155,7 +159,7 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 #define VOLTAGE		   4.2		//Set voltage used 4.2v for Lipo or 5v for 5V power supply or USB battery bank
 #define WIFI_MAX_POWER     1		//Set wifi output power between 0 and 20.5db (default around 19db)
 
-#define CENTER_LED    NUM_LEDS / 2
+const uint16_t centerLED = NUM_LEDS/2;
 
 #if MATRIX_HEIGHT >= 4 && MATRIX_WIDTH >= 4
 	#define MATRIX_2D
@@ -173,13 +177,15 @@ static uint16_t noiseZ;
 // Flag used to prevent over writing to the EEPROM
 bool eepromChanged = false;
 
+bool WiFiEnabled = !DISABLE_WIFI_ON_BOOT;
+
 // Array of temp cells (used by fire, theMatrix, coloredRain, stormyRain)
-uint_fast16_t tempMatrix[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
+uint_fast8_t tempMatrix[MATRIX_WIDTH+1][MATRIX_HEIGHT+1];
 // Temporary CRGB array for storing RGB data for one column to be duplicated.
 CRGB tempHeightStrip[MATRIX_HEIGHT];
 
-const uint8_t brightnessMap[] = { 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128, 160, 192 };
-const uint8_t brightnessCount = ARRAY_SIZE(brightnessMap);
+const uint8_t PROGMEM brightnessMap[] = { 8, 12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 80, 96, 128, 160, 192 };
+const uint8_t brightnessCount = 17;
 uint8_t brightnessIndex = 14;	// 14 = 128
 
 // ten seconds per color palette makes a good demo
@@ -296,6 +302,10 @@ const String firePaletteNames[firePaletteCount] = {
 	"Rotating -- ↻"
 };
 
+#ifndef CC2
+	#include "Audio.h"
+#endif
+
 typedef void (*Pattern)();
 typedef Pattern PatternList[];
 typedef struct {
@@ -326,7 +336,12 @@ typedef PatternAndName PatternAndNameList[];
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 PatternAndNameList patterns = {
-	{ fire,				"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
+	#ifdef CC4P
+	{ fireAudio,			"Audio Activated Fire -- Uses Fire Palettes, Speed" },
+	#else
+	{ fireBasic,			"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
+	#endif
+
 	#ifdef MATRIX_2D
 	{ fireworks,			"Fireworks -- Uses Speed" },
 	{ coloredRain,			"Rain -- Uses Speed, Intensity, Color Picker" },
@@ -346,6 +361,17 @@ PatternAndNameList patterns = {
 	// TwinkleFOX with palettes
 	{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Speed, Intensity" },
 	{ showSolidColor,		"Solid Color -- Uses Color Picker" }
+
+	#ifdef CC4P
+	,{ spectrumWaves,		"Spectrum Waves" },		// Good (center radiating toward ends)
+	{ spectrumPaletteWaves,		"Spectrum Palette Waves" },	// Good (center flows towards ends)
+	{ spectrumPaletteWaves2,	"Spectrum Palette Waves 2" },	// OK (center radiating outwards)
+	{ spectrumWaves2,		"Spectrum Waves 2" },		// Good (center radiating toward ends)
+	{ spectrumWaves3,		"Spectrum Waves 3" },		// Good (center radiating toward ends)
+	{ drawVU,			"VU" },				// OK (ends radiating toward center)
+	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
+	{ beatWaves,			"BeatWaves" }			// Good (center radiating toward ends)
+	#endif
 };
 
 const uint8_t patternCount = ARRAY_SIZE(patterns);
@@ -361,6 +387,10 @@ void setup() {
 	Serial.begin(115200);
 	delay(100);
 	Serial.setDebugOutput(true);
+	#endif
+
+	#ifndef CC2
+	initializeAudio();
 	#endif
 
 	#ifdef CC4P
@@ -422,18 +452,19 @@ void setup() {
 		#endif
 	}
 
-	setupWiFi();
-
-	setupWebserver();
-
-	if (!enableWiFi) {	// Disable WiFi at startup to preserve battery
-		disableWiFi();
-		indicatorLEDs(CRGB::Red);
-	}
+	setPower(1);	// Be sure it is turned on when being powered on.
 
 #ifndef DISABLE_BUTTONS
 	setupButtons();
 #endif
+
+	setupWebserver();
+
+	if (DISABLE_WIFI_ON_BOOT) {	// Disable WiFi at startup to preserve battery
+		disableWiFi();
+	} else {
+		setupWiFi();
+	}
 
 	autoPlayTimeout = millis() + (autoplayDuration * 1000);
 
@@ -464,25 +495,14 @@ void indicatorLEDs(CRGB color)
 	}
 }
 
-void setWiFi()
-{
-	if (enableWiFi) {
-		disableWiFi();
-		indicatorLEDs(CRGB::Red);
-		enableWiFi = false;
-	} else {
-		setupWiFi();
-		indicatorLEDs(CRGB::Blue);
-		enableWiFi = true;
-	}
-}
-
 void disableWiFi()
 {
 	WiFi.disconnect(); 
 	WiFi.mode(WIFI_OFF);
 	WiFi.forceSleepBegin();
 	delay(1);
+	indicatorLEDs(CRGB::Red);
+	WiFiEnabled = false;
 }
 
 void setupWiFi() 
@@ -541,6 +561,8 @@ void setupWiFi()
 		}
 		#endif
 	}
+	indicatorLEDs(CRGB::Blue);
+	WiFiEnabled = true;
 }
 
 void setupWebserver()
@@ -746,7 +768,20 @@ void loop() {
 	FastLED.delay(6-(NUM_LEDS_PER_STRIP*0.03));
 	#endif
 
+	#ifndef CC2
+	currentMillis = millis(); // save the current timer value
+
+	// analyze the audio input
+	if (currentMillis - audioMillis > AUDIODELAY) {
+	audioMillis = currentMillis;
+	readAudio();
+	}
+
+	// Add entropy to random number generator; we use a lot of it.
+	random16_add_entropy(analogRead(MSGEQ7_AUDIO_PIN));
+	#else
 	random16_add_entropy(analogRead(random8()));
+	#endif
 
 //	dnsServer.processNextRequest();
 	webSocketsServer.loop();
@@ -760,7 +795,7 @@ void loop() {
 	#endif
 
 	// Only write to EEPROM every N minutes and only when data has been changed to prevent wear on the EEPROM
-	EVERY_N_MINUTES(3) {
+	EVERY_N_MINUTES(1) {
 		if (eepromChanged) {
 			EEPROM.commit();
 			eepromChanged = false;
@@ -798,10 +833,14 @@ void loop() {
 	}
 
 	if (autoplay && (millis() > autoPlayTimeout)) {
+		#ifdef CUSTOM_PLAYLIST
+		adjustPlaylistPattern();
+		#else
 		adjustPattern(true);
 		if (currentPatternIndex == SOLID_POSITION) { // Skip the solid color when in autoplay
 			adjustPattern(true);
 		}
+		#endif
 		autoRotatePalettes();
 		autoPlayTimeout = millis() + (autoplayDuration * 1000);
 	}
@@ -909,7 +948,7 @@ void setAutoplay(uint8_t value)
 	if (autoplay) {
 		indicatorLEDs(CRGB::Green);
 	} else {
-		indicatorLEDs(CRGB::Pink);
+		indicatorLEDs(CRGB::Purple);
 	}
 }
 
@@ -961,6 +1000,13 @@ void adjustPattern(bool up)
 		eepromChanged = true;
 	}
 
+	broadcastInt("pattern", currentPatternIndex);
+}
+
+void adjustPlaylistPattern()
+{
+	currentPlaylistIndex = (currentPlaylistIndex+1)%playlistCount;
+	currentPatternIndex = playlist[currentPlaylistIndex];
 	broadcastInt("pattern", currentPatternIndex);
 }
 
@@ -1095,7 +1141,7 @@ void adjustBrightness(bool up)
 		brightnessIndex = (brightnessIndex+(brightnessCount-1))%brightnessCount;
 	}
 
-	brightness = brightnessMap[brightnessIndex];
+	brightness = pgm_read_byte(brightnessMap + brightnessIndex);
 
 	FastLED.setBrightness(brightness);
 
@@ -1143,8 +1189,13 @@ void confetti()
 	leds[pos] += ColorFromPalette(palettes[currentPaletteIndex], gHue + random8(64));
 }
 
+void fireBasic()
+{
+	fire(cooling, sparking);
+}
+
 // based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
-void fire()
+void fire(uint8_t cool, uint8_t spark)
 {
 	FastLED.delay(1000/map8(speed,30,110));
 	// Add entropy to random number generator; we use a lot of it.
@@ -1162,7 +1213,7 @@ void fire()
 	for (int x = 0; x < MATRIX_WIDTH; x++) {
 		// Step 1.  Cool down every cell a little
 		for (int i = 0; i < MATRIX_HEIGHT; i++) {
-			tempMatrix[x][i] = qsub8(tempMatrix[x][i], random(0, ((cooling * 10) / MATRIX_HEIGHT) + 2));
+			tempMatrix[x][i] = qsub8(tempMatrix[x][i], random(0, ((cool * 10) / MATRIX_HEIGHT) + 2));
 		}
 
 		// Step 2.  Heat from each cell drifts 'up' and diffuses a little
@@ -1171,8 +1222,8 @@ void fire()
 		}
 
 		// Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-		if (random(255) < sparking) {
-			int j = random(FIRE_BASE);
+		if (random(255) < spark) {
+			int j = random(fireBase);
 			tempMatrix[x][j] = qadd8(tempMatrix[x][j], random(160, 255));
 		}
 
@@ -1202,6 +1253,7 @@ void stormyRain()
 	rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
 }
 
+// based on FastLED example Fire2012WithPalette:
 void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLength, CRGB rainColor, bool splashes, bool clouds, bool storm)
 {
 	FastLED.delay(1000/map8(speed,16,32));
@@ -1218,7 +1270,9 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
 		// Step 1.  Move each dot down one cell
 		for (int i = 0; i < MATRIX_HEIGHT; i++) {
 			if (tempMatrix[x][i] >= backgroundDepth) {	// Don't move empty cells
-				tempMatrix[x][i-1] = tempMatrix[x][i];
+				if (i > 0) {
+					tempMatrix[x][i-1] = tempMatrix[x][i];
+				}
 				tempMatrix[x][i] = 0;
 			}
 		}
@@ -1237,7 +1291,7 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
 
 		// Step 4. Add splash if called for
 		if (splashes) {
-			static uint_fast16_t splashArray[MATRIX_WIDTH];
+			static uint_fast8_t splashArray[MATRIX_WIDTH];
 
 			byte j = splashArray[x];
 			byte v = tempMatrix[x][0];
@@ -1257,11 +1311,11 @@ void rain(byte backgroundDepth, byte maxBrightness, byte spawnFreq, byte tailLen
 
 		// Step 5. Add lightning if called for
 		if (storm) {
-			int lightning[MATRIX_WIDTH][MATRIX_HEIGHT];
+			uint8_t lightning[MATRIX_WIDTH][MATRIX_HEIGHT];
 
 			if (random16() < 72) {		// Odds of a lightning bolt
 				lightning[scale8(random8(), MATRIX_WIDTH)][MATRIX_HEIGHT-1] = 255;	// Random starting location
-				for(int ly = MATRIX_HEIGHT-1; ly > 0; ly--) {
+				for(int ly = MATRIX_HEIGHT-1; ly > 1; ly--) {
 					for (int lx = 0; lx < MATRIX_WIDTH; lx++) {
 						if (lightning[lx][ly] == 255) {
 							lightning[lx][ly] = 0;
@@ -1463,7 +1517,7 @@ void pride()
 	sHue16 += deltams * beatsin88( 400, 5, 9);
 	uint16_t brightnesstheta16 = sPseudotime;
 
-	for ( uint16_t i = 0 ; i < MATRIX_TOTAL; i++) {
+	for ( uint16_t i = 0 ; i < matrixTotal; i++) {
 		hue16 += hueinc16;
 		uint8_t hue8 = hue16 / 256;
 
@@ -1477,7 +1531,7 @@ void pride()
 		CRGB newcolor = CHSV( hue8, sat8, bri8);
 
 		#ifdef REVERSE_ORDER
-		uint16_t pixelnumber = (MATRIX_TOTAL - 1) - i;
+		uint16_t pixelnumber = (matrixTotal - 1) - i;
 		#else
 		uint16_t pixelnumber = i;
 		#endif

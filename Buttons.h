@@ -20,16 +20,20 @@
  * All five buttons are used by CC4P
  */
 
-
-#ifdef CC2
-#define BUTTON_COUNT 2
-const uint8_t buttonPins[BUTTON_COUNT] { 0,2 };
-#elif defined CC4P
-#define BUTTON_COUNT 5
-const uint8_t buttonPins[BUTTON_COUNT] { 4,0,3,1,2 };	// Up, Right, Down, Left, Center (Header at top)
-#else
-#define BUTTON_COUNT 0
-const uint8_t buttonPins[BUTTON_COUNT] { };
+#ifndef CUSTOM_BUTTONS
+	#ifdef CC2
+		#define BUTTON_COUNT 2
+		const uint8_t buttonPins[BUTTON_COUNT] { 0,2 };
+	#elif defined CC4P
+		#define BUTTON_COUNT 5
+		const uint8_t buttonPins[BUTTON_COUNT] { 4,0,3,1,2 };	// Up, Right, Down, Left, Center (Header at top)
+//		const uint8_t buttonPins[BUTTON_COUNT] { 3,1,4,0,2 };	// Up, Right, Down, Left, Center (Header at bottom)
+//		const uint8_t buttonPins[BUTTON_COUNT] { 0,3,1,4,2 };	// Up, Right, Down, Left, Center (Header at left)
+//		const uint8_t buttonPins[BUTTON_COUNT] { 1,4,0,3,2 };	// Up, Right, Down, Left, Center (Header at right)
+	#else
+		#define BUTTON_COUNT 0
+		const uint8_t buttonPins[BUTTON_COUNT] { };
+	#endif
 #endif
 
 #define BUTTON_HOLD_TIME 1000			// Duration of a long click (ms)
@@ -41,6 +45,15 @@ bool buttonState[BUTTON_COUNT];			// Button state HIGH/LOW
 void setupButtons() {
 	for (uint8_t b = 0; b < BUTTON_COUNT; b++) {
 		pinMode(buttonPins[b], INPUT);
+	}
+}
+
+void setWiFi()
+{
+	if (WiFiEnabled) {
+		disableWiFi();
+	} else {
+		setupWiFi();
 	}
 }
 
