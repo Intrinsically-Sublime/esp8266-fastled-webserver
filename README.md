@@ -97,6 +97,34 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 ##### Solid Color -- Fill all LEDs with the same color
 * Settings
   * Color Picker -- Sets the color
+#### Spectrum Waves -- Colors radiate out from center pixel
+  * Audio controlled
+#### Spectrum Palette Waves -- Colors flows out from center pixel
+  * General Palettes -- See Palettes section below
+  * Audio controlled
+#### Spectrum Palette Waves 2 -- Colors flows out from center pixel
+  * General Palettes -- See Palettes section below
+  * Audio controlled
+#### Spectrum Waves 2 -- Colors radiate out from center pixel
+  * Audio controlled
+#### Spectrum Waves 3 -- Colors radiate out from center pixel
+  * Audio controlled
+#### VU -- Colors radiate toward center from ends
+  * Audio controlled
+#### Analyzer Peak Columns -- Vertical VU meter with slowly dropping peaks
+  * Audio controlled
+#### Beat Waves -- Colors radiate out from center pixel
+  * Audio controlled
+#### Funky Noise -- XY Noise pattern manipulated by audio (Brightness varies quickly)
+  * Audio controlled
+#### Funky Noise 2 -- XY Noise pattern manipulated by audio (Brightness varies smoothly)
+  * Audio controlled
+#### Funky Noise 3 -- XY Noise pattern manipulated by audio (Scale varies smoothly)
+  * Audio controlled
+#### Funky Noise 4 -- XY Noise pattern manipulated by audio (Twinkly)
+  * Audio controlled
+#### Funky Noise 5 -- XY Noise pattern manipulated by audio (Flows downwards)
+  * Audio controlled
 
 ## Palettes
 * Fire Palettes
@@ -157,7 +185,7 @@ ToDo
 Buttons
 --------
 ```
- 0 = Short press, 1 = Long press, 2 = Extra long press 7s+
+ 0 = Short press, 1 = Long press, 2 = Extra long press 5s+
 
                  UP
                  0 = Brightness++
