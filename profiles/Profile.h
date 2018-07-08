@@ -52,7 +52,7 @@
 
 
 #define CUSTOM_PLAYLIST				// Uncomment to override autoplay
-const uint8_t playlist[] { 0,9,1,12,3,17,4,22,5,11,2,13,6,14 };	// See PatternList.txt for a detailed list
+const uint8_t playlist[] { 0,9,24,1,12,3,17,4,22,5,11,25,2,13,28,6,14 };	// See PatternList.txt for a detailed list
 const uint8_t playlistCount = ARRAY_SIZE(playlist);
 uint8_t currentPlaylistIndex = 0;		// Index number of which playlist position is current
 

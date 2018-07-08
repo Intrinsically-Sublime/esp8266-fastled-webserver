@@ -27,7 +27,12 @@
 //20	CC4P	{ spectrumWaves3,		"Spectrum Waves 3" },		// Good (center radiating toward ends)
 //21	CC4P	{ drawVU,			"VU" },				// OK (ends radiating toward center)
 //22	CC4P	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
-//23	CC4P	{ beatWaves,			"BeatWaves" }			// Good (center radiating toward ends)
+//23	CC4P	{ beatWaves,			"BeatWaves" },			// Good (center radiating toward ends)
+//24		{ FunkyNoise1,			"FunkyNoise1" },		// Good (Clear visualization)
+//25		{ FunkyNoise2,			"FunkyNoise2" },		// Good (Clear visualization)
+//26		{ FunkyNoise3,			"FunkyNoise3" },		// Ok (Slowly Changing)
+//27		{ FunkyNoise4,			"FunkyNoise4" },		// OK (Changes very quickly and a little flashy)
+//28		{ FunkyNoise5,			"FunkyNoise5" }			// Good (Changes quickly but smoothly)
 
 //// Pattern list for strip or matrix of LESS THAN 4x4
 //// CC2 WITHOUT Audio analyzer
@@ -53,6 +58,10 @@
 //16	CC4P	{ spectrumWaves3,		"Spectrum Waves 3" },		// Good (center radiating toward ends)
 //17	CC4P	{ drawVU,			"VU" },				// OK (ends radiating toward center)
 //18	CC4P	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
-//19	CC4P	{ beatWaves,			"BeatWaves" }			// Good (center radiating toward ends)
-
+//19	CC4P	{ beatWaves,			"BeatWaves" },			// Good (center radiating toward ends)
+//24	CC4P	{ FunkyNoise1,			"FunkyNoise1" },		// Good (Clear visualization)
+//25	CC4P	{ FunkyNoise2,			"FunkyNoise2" },		// Good (Clear visualization)
+//26	CC4P	{ FunkyNoise3,			"FunkyNoise3" },		// Ok (Slowly Changing)
+//27	CC4P	{ FunkyNoise4,			"FunkyNoise4" },		// OK (Changes very quickly and a little flashy)
+//28	CC4P	{ FunkyNoise5,			"FunkyNoise5" }			// Good (Changes quickly but smoothly)
 

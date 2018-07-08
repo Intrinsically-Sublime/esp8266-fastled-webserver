@@ -304,6 +304,7 @@ const String firePaletteNames[firePaletteCount] = {
 
 #ifndef CC2
 	#include "Audio.h"
+	#include "FunkyNoise.h"
 #endif
 
 typedef void (*Pattern)();
@@ -370,7 +371,12 @@ PatternAndNameList patterns = {
 	{ spectrumWaves3,		"Spectrum Waves 3" },		// Good (center radiating toward ends)
 	{ drawVU,			"VU" },				// OK (ends radiating toward center)
 	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
-	{ beatWaves,			"BeatWaves" }			// Good (center radiating toward ends)
+	{ beatWaves,			"BeatWaves" },			// Good (center radiating toward ends)
+	{ FunkyNoise1,			"FunkyNoise1" },		// Good (Clear visualization)
+	{ FunkyNoise2,			"FunkyNoise2" },		// Good (Clear visualization)
+	{ FunkyNoise3,			"FunkyNoise3" },		// Ok (Slowly Changing)
+	{ FunkyNoise4,			"FunkyNoise4" },		// OK (Changes very quickly and a little flashy)
+	{ FunkyNoise5,			"FunkyNoise5" }			// Good (Changes quickly but smoothly)
 	#endif
 };
 
