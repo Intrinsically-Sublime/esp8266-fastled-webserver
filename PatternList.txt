@@ -29,9 +29,6 @@
 //22	CC4P	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
 //23	CC4P	{ beatWaves,			"BeatWaves" }			// Good (center radiating toward ends)
 
-//// Pattern list for use with CC2 on strip or matrix of LESS THAN 4x4
-//// Pattern list for use with CC4P with Audio patterns on strip or matrix of LESS THAN 4x4
-
 //// Pattern list for strip or matrix of LESS THAN 4x4
 //// CC2 WITHOUT Audio analyzer
 //// CC4P WITH Audio analyzer
