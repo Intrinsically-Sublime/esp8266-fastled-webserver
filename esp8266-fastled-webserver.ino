@@ -338,7 +338,7 @@ typedef PatternAndName PatternAndNameList[];
 // List of patterns to cycle through.  Each is defined as a separate function below.
 PatternAndNameList patterns = {
 	#ifdef CC4P
-	{ fireAudio,			"Audio Activated Fire -- Uses Fire Palettes, Speed" },
+	{ fireAudio,			"Fire -- Uses Fire Palettes, Speed, Audio controls Cooling and Sparking" },
 	#else
 	{ fireBasic,			"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
 	#endif
@@ -364,19 +364,19 @@ PatternAndNameList patterns = {
 	{ showSolidColor,		"Solid Color -- Uses Color Picker" }
 
 	#ifdef CC4P
-	,{ spectrumWaves,		"Spectrum Waves" },		// Good (center radiating toward ends)
-	{ spectrumPaletteWaves,		"Spectrum Palette Waves" },	// Good (center flows towards ends)
-	{ spectrumPaletteWaves2,	"Spectrum Palette Waves 2" },	// OK (center radiating outwards)
-	{ spectrumWaves2,		"Spectrum Waves 2" },		// Good (center radiating toward ends)
-	{ spectrumWaves3,		"Spectrum Waves 3" },		// Good (center radiating toward ends)
-	{ drawVU,			"VU" },				// OK (ends radiating toward center)
-	{ analyzerPeakColumns,		"Analyzer Peak Columns" },	// Good (bottom up)
-	{ beatWaves,			"BeatWaves" },			// Good (center radiating toward ends)
-	{ FunkyNoise1,			"FunkyNoise1" },		// Good (Clear visualization)
-	{ FunkyNoise2,			"FunkyNoise2" },		// Good (Clear visualization)
-	{ FunkyNoise3,			"FunkyNoise3" },		// Ok (Slowly Changing)
-	{ FunkyNoise4,			"FunkyNoise4" },		// OK (Changes very quickly and a little flashy)
-	{ FunkyNoise5,			"FunkyNoise5" }			// Good (Changes quickly but smoothly)
+	,{ spectrumWaves,		"Spectrum Waves -- Controlled by audio" },		// Good (center radiating toward ends)
+	{ spectrumPaletteWaves,		"Spectrum Palette Waves -- Controlled by audio" },	// Good (center flows towards ends)
+	{ spectrumPaletteWaves2,	"Spectrum Palette Waves 2 -- Controlled by audio" },	// OK (center radiating outwards)
+	{ spectrumWaves2,		"Spectrum Waves 2 -- Controlled by audio" },		// Good (center radiating toward ends)
+	{ spectrumWaves3,		"Spectrum Waves 3 -- Controlled by audio" },		// Good (center radiating toward ends)
+	{ drawVU,			"VU -- Controlled by audio" },				// OK (ends radiating toward center)
+	{ analyzerPeakColumns,		"Analyzer Peak Columns -- Controlled by audio" },	// Good (bottom up)
+	{ beatWaves,			"BeatWaves -- Controlled by audio" },			// Good (center radiating toward ends)
+	{ FunkyNoise1,			"Funky Noise 1 -- Controlled by audio" },		// Good (Clear visualization)
+	{ FunkyNoise2,			"Funky Noise 2 -- Controlled by audio" },		// Good (Clear visualization)
+	{ FunkyNoise3,			"Funky Noise 3 -- Controlled by audio" },		// Ok (Slowly Changing)
+	{ FunkyNoise4,			"Funky Noise 4 -- Controlled by audio" },		// OK (Changes very quickly and a little flashy)
+	{ FunkyNoise5,			"Funky Noise 5 -- Controlled by audio" }		// Good (Changes quickly but smoothly)
 	#endif
 };
 
@@ -503,19 +503,21 @@ void indicatorLEDs(CRGB color)
 
 void disableWiFi()
 {
-	WiFi.disconnect(); 
+	WiFiEnabled = false;
+	WiFi.disconnect();
+	delay(1);
 	WiFi.mode(WIFI_OFF);
+	delay(1);
 	WiFi.forceSleepBegin();
 	delay(1);
 	indicatorLEDs(CRGB::Red);
-	WiFiEnabled = false;
 }
 
 void setupWiFi() 
 {
 	//Set wifi output power between 0 and 20.5db (default around 19db)
 	WiFi.setOutputPower(WIFI_MAX_POWER);
-	WiFi.setSleepMode(WIFI_NONE_SLEEP);
+//	WiFi.setSleepMode(WIFI_NONE_SLEEP);
 
 	if (apMode) {
 		WiFi.mode(WIFI_AP);
@@ -1009,12 +1011,14 @@ void adjustPattern(bool up)
 	broadcastInt("pattern", currentPatternIndex);
 }
 
+#ifdef CUSTOM_PLAYLIST
 void adjustPlaylistPattern()
 {
 	currentPlaylistIndex = (currentPlaylistIndex+1)%playlistCount;
 	currentPatternIndex = playlist[currentPlaylistIndex];
 	broadcastInt("pattern", currentPatternIndex);
 }
+#endif
 
 // change color palettes once each time through patterns when in autoplay mode
 void autoRotatePalettes()

@@ -32,20 +32,19 @@
 #define SPECTRUMSMOOTH 0.08		// lower value = smoother
 #define PEAKDECAY 0.01			// lower value = slower peak decay
 #define NOISEFLOOR 65
+#define ESP_ANALOG_V 0.95		// Actual peak analog voltage to esp analog input (Max 1.0 volts)
 
 // AGC settings
+//#define AUTOGAIN			// Uncomment to enable auto gain
 #define AGCSMOOTH 0.004
-//#define GAINUPPERLIMIT 15.0
-//#define GAINLOWERLIMIT 0.1
+#define GAINUPPERLIMIT 15.0
+#define GAINLOWERLIMIT 0.1
 
 // Global variables
-uint16_t spectrumDecay[7] = {0};   	// holds time-averaged values
-uint16_t spectrumPeaks[7] = {0};   	// holds peak values
-//float audioAvg = 270.0;
-//float gainAGC = 0.0;
+float spectrumDecay[7] = {0};   	// holds time-averaged values
+float spectrumPeaks[7] = {0};   	// holds peak values
 
 uint8_t spectrumByteSmoothed[7];	// holds smoothed 8-bit adjusted adc values
-//uint8_t spectrumAvg;
 
 unsigned long currentMillis;		// store current loop's millis value
 unsigned long audioMillis;		// store time of last audio update
@@ -57,14 +56,9 @@ void initializeAudio() {
 
 	digitalWrite(MSGEQ7_RESET_PIN, LOW);
 	digitalWrite(MSGEQ7_STROBE_PIN, HIGH);
-
-	#ifdef SERIAL_OUTPUT
-	Serial.println("Audio Initialized");
-	#endif
 }
 
 void readAudio() {
-	static const byte PROGMEM spectrumFactors[7] = {9, 11, 13, 13, 12, 12, 13};
 
 	// reset MSGEQ7 to first frequency bin
 	digitalWrite(MSGEQ7_RESET_PIN, HIGH);
@@ -75,6 +69,11 @@ void readAudio() {
 	uint16_t spectrumValue = 0;
 	// store sum of values for AGC
 	uint16_t analogsum = 0;
+
+	#ifdef AUTOGAIN
+	static float gainAGC = 0.0;
+	static float audioAvg = 270.0;
+	#endif
 
 	// cycle through each MSGEQ7 bin and read the analog values
 	for (byte i = 0; i < 7; i++) {
@@ -87,13 +86,6 @@ void readAudio() {
 		spectrumValue = analogRead(MSGEQ7_AUDIO_PIN);
 		digitalWrite(MSGEQ7_STROBE_PIN, HIGH);
 
-		#ifdef SERIAL_OUTPUT
-		Serial.print("  R");
-		Serial.print(i);
-		Serial.print("=");
-		Serial.print(spectrumValue);
-		#endif
-
 		// noise floor filter
 		if (spectrumValue < NOISEFLOOR) {
 			spectrumValue = 0;
@@ -101,14 +93,16 @@ void readAudio() {
 			spectrumValue -= NOISEFLOOR;
 		}
 
-		// apply correction factor per frequency bin
-		spectrumValue = (spectrumValue * pgm_read_byte_near(spectrumFactors + i)) / 10;
+		// correction for low analog maximum values
+		spectrumValue = spectrumValue * (1 / ESP_ANALOG_V);
 
 		// prepare average for AGC
 		analogsum += spectrumValue;
 
+		#ifdef AUTOGAIN
 		// apply current gain value
-//		spectrumValue *= gainAGC;
+		spectrumValue *= gainAGC;
+		#endif
 
 		// process time-averaged values
 		spectrumDecay[i] = (1.0 - SPECTRUMSMOOTH) * spectrumDecay[i] + SPECTRUMSMOOTH * spectrumValue;
@@ -121,30 +115,20 @@ void readAudio() {
 		}
 
 		spectrumByteSmoothed[i] = spectrumDecay[i]/4;
-
-		#ifdef SERIAL_OUTPUT
-		Serial.print("..S");
-		Serial.print(i);
-		Serial.print("=");
-		Serial.print(spectrumByteSmoothed[i]);
-		#endif
 	}
 
+	#ifdef AUTOGAIN
+
 	// Calculate audio levels for automatic gain
-//	audioAvg = (1.0 - AGCSMOOTH) * audioAvg + AGCSMOOTH * (analogsum / 7.0);
+	audioAvg = (1.0 - AGCSMOOTH) * audioAvg + AGCSMOOTH * (analogsum / 7.0);
 
-//	spectrumAvg = (analogsum / 7.0) / 4;
-
-//	#ifdef SERIAL_OUTPUT
-//	Serial.println("");
-//	Serial.print("Average - ");
-//	Serial.println(spectrumAvg);
-//	#endif
+	uint8_t spectrumAvg = (analogsum / 7.0) / 4;
 
 	// Calculate gain adjustment factor
-//	gainAGC = 270.0 / audioAvg;
-//	if (gainAGC > GAINUPPERLIMIT) gainAGC = GAINUPPERLIMIT;
-//	if (gainAGC < GAINLOWERLIMIT) gainAGC = GAINLOWERLIMIT;
+	gainAGC = 270.0 / audioAvg;
+	if (gainAGC > GAINUPPERLIMIT) gainAGC = GAINUPPERLIMIT;
+	if (gainAGC < GAINLOWERLIMIT) gainAGC = GAINLOWERLIMIT;
+	#endif
 }
 
 void analyzerPeakColumns()
@@ -169,7 +153,7 @@ void analyzerPeakColumns()
 
 		if (columnEnd >= NUM_LEDS) columnEnd = NUM_LEDS - 1;
 
-		unsigned int columnHeight = map(spectrumByteSmoothed[i%7], 0, map(intensity, 0, 255, 800, 385) , 0, columnSize-1);
+		unsigned int columnHeight = map(spectrumByteSmoothed[i%7], 0, 420, 0, columnSize-1);
 		unsigned int peakHeight = map(spectrumPeaks[i%7], 0, 1023, 0, columnSize-1);
 
 		for (unsigned int j = columnStart; j < columnStart + columnHeight; j++) {
