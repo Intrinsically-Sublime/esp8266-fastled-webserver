@@ -59,20 +59,20 @@ void setWiFi()
 
 // 0 = Short press, 1 = Long press, 2 = Extra long press
 //
-//                 UP
-//                 0 = Brightness++
-//                 1 = Speed++
-//                 2 = WiFi on/off
+//                   UP
+//                   0 = Brightness++
+//                   1 = Speed++
+//                   2 = WiFi on/off
 //
-// LEFT            CENTER            RIGHT
-// 0 = Pattern--   0 = Text on/off   0 = Pattern++
-// 1 = Color/Pal-- 1 = Audio on/off  1 = Color/Pal++
-// 2 = Autoplay    2 = Unassigned    2 = LEDs on/off
+// LEFT              CENTER                RIGHT
+// 0 = Pattern--     0 = Playlist type     0 = Pattern++
+// 1 = Color/Pal--   1 = Playlists on/off  1 = Color/Pal++
+// 2 = Unassigned    2 = Autoplay on/off   2 = LEDs on/off
 //
-//                 DOWN
-//                 0 = Brightness--
-//                 1 = Speed--
-//                 2 = Unassigned
+//                   DOWN
+//                   0 = Brightness--
+//                   1 = Speed--
+//                   2 = Unassigned
 
 // CC4P has 5 buttons, CC2 has 2 buttons
 void processButtonPress(uint8_t b, uint8_t pressDuration)
@@ -105,7 +105,7 @@ void processButtonPress(uint8_t b, uint8_t pressDuration)
 				adjustBrightness(false);
 			} else if(pressDuration == 1) {	// Speed--
 				speed = (speed+245)%255;
-			} else if(pressDuration == 2) { // Unassigned
+			} else if(pressDuration == 2) {	// Unassigned
 				// Unassigned
 			}
 		break;
@@ -114,17 +114,24 @@ void processButtonPress(uint8_t b, uint8_t pressDuration)
 				adjustPattern(false);
 			} else if(pressDuration == 1) {	// Palette--
 				rotateColor(false);
-			} else if(pressDuration == 2) { // Autoplay
-				setAutoplay(!autoplay);
+			} else if(pressDuration == 2) { // Unassigned
+				// Unassigned
 			}
 		break;
 		case 4:	// CC4P = Center
-			if(pressDuration == 0) {	// Text on/off
-//				enableText = !enableText;
-			} if(pressDuration == 1) {	// Audio on/off
-//				enableAudio = !enableAudio;
-			} else if(pressDuration == 2) {	// Unassigned
-				// Unassigned
+			if(pressDuration == 0) {	// Playlist type (Audio or Custom)
+				#if defined CUSTOM_PLAYLIST && defined AUDIO_PLAYLIST
+				currentPlaylist = !currentPlaylist;
+				adjustPlaylistPattern();
+				#endif
+				// If we do not have both types of playlists we do nothing.
+			} if(pressDuration == 1) {	// Playlists on/off
+				#if defined CUSTOM_PLAYLIST || defined AUDIO_PLAYLIST
+				enablePlaylists = !enablePlaylists;
+				#endif
+				// If we do not have any playlists we do nothing.
+			} else if(pressDuration == 2) { // Autoplay
+				setAutoplay(!autoplay);
 			}
 		break;
 	}

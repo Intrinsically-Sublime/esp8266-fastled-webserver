@@ -158,7 +158,7 @@ void FunkyNoise5() {
 }
 
 
-/// NOT USED ANYMORE BUT USEFUL
+/// NOT USED ANYMORE BUT POSSIBLY USEFUL IN THE FUTURE
 
 // Bresenham line algorythm 
 void Line(int x0, int y0, int x1, int y1, byte color) {

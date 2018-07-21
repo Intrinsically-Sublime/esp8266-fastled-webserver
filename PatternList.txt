@@ -1,7 +1,8 @@
 
 //// Pattern list for 2D matrix of 4x4 or greater
-//// CC2 WITHOUT Audio analyzer
-//// CC4P WITH Audio analyzer
+//// CC2 = WITHOUT Audio analyzer
+//// CC4P = WITH Audio analyzer
+//// CC4P = 7+W WITH Audio analyzer with MATRIX_WIDTH greater than 7
 
 //0 	CC2	{ fireBasic,			"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
 //0	CC4P	{ fireAudio,			"Audio Activated Fire -- Uses Fire Palettes, Speed" },
@@ -20,23 +21,34 @@
 //13		{ juggle,			"Juggle -- Uses Speed" },
 //14		{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Speed, Intensity" },
 //15		{ showSolidColor,		"Solid Color -- Uses Color Picker" },
-//16	CC4P	{ spectrumWaves,		"Spectrum Waves -- Controlled by audio" },
-//17	CC4P	{ spectrumPaletteWaves,		"Spectrum Palette Waves -- Controlled by audio" },
-//18	CC4P	{ spectrumPaletteWaves2,	"Spectrum Palette Waves 2 -- Controlled by audio" },
-//19	CC4P	{ spectrumWaves2,		"Spectrum Waves 2 -- Controlled by audio" },
-//20	CC4P	{ spectrumWaves3,		"Spectrum Waves 3 -- Controlled by audio" },
-//21	CC4P	{ drawVU,			"VU -- Controlled by audio" },
-//22	CC4P	{ analyzerPeakColumns,		"Analyzer Peak Columns -- Controlled by audio" },
-//23	CC4P	{ beatWaves,			"BeatWaves -- Controlled by audio" },
-//24		{ FunkyNoise1,			"Funky Noise 1 -- Controlled by audio" },
-//25		{ FunkyNoise2,			"Funky Noise 2 -- Controlled by audio" },
-//26		{ FunkyNoise3,			"Funky Noise 3 -- Controlled by audio" },
-//27		{ FunkyNoise4,			"Funky Noise 4 -- Controlled by audio" },
-//28		{ FunkyNoise5,			"Funky Noise 5 -- Controlled by audio" }
+//16	CC4P	{ spectrumWaves1,			"Spectrum Waves 1 -- Controlled by audio" },
+//17	CC4P	{ spectrumWaves2,			"Spectrum Waves 2 -- Controlled by audio" },
+//18	CC4P	{ spectrumWaves3,			"Spectrum Waves 3 -- Controlled by audio" },
+//19	CC4P	{ spectrumPaletteWaves1,		"Spectrum Palette Waves 1 -- Controlled by audio" },
+//20	CC4P	{ spectrumPaletteWaves2,		"Spectrum Palette Waves 2 -- Controlled by audio" },
+//21	CC4P	{ drawVU,				"VU -- Controlled by audio" },
+//22  CC4P 7+W	{ analyzerPeakColumns,			"Analyzer Peak Columns -- Controlled by audio" },
+//23  CC4P 7+W	{ analyzerPeakColumnsSpread,		"Analyzer Peak Columns Spread -- Controlled by audio" },
+//24  CC4P 7+W	{ analyzerCenterInVertFilled,		"Analyzer CIVF -- Controlled by audio" },
+//25  CC4P 7+W	{ analyzerCenterInVertSpreadFilled,	"Analyzer CIVSF -- Controlled by audio" },
+//26  CC4P 7+W	{ analyzerCenterInVertSpreadSmoothFilled,	"Analyzer CIVSSF -- Controlled by audio" },
+//27  CC4P 7+W	{ analyzerCenterInVertSpread,		"Analyzer CIVS -- Controlled by audio" },
+//28  CC4P 7+W	{ analyzerCenterInVertSpreadSmooth,	"Analyzer CIVSS -- Controlled by audio" },
+//29  CC4P 7+W	{ analyzerCenterOutVertFilled,		"Analyzer COVF -- Controlled by audio" },
+//30  CC4P 7+W	{ analyzerCenterOutVertSpreadFilled,	"Analyzer COVSF -- Controlled by audio" },
+//31  CC4P 7+W	{ analyzerCenterOutVertSpreadSmoothFilled,	"Analyzer COVSSF -- Controlled by audio" },
+//32  CC4P 7+W	{ lineSpectrumSharp,			"Line Spectrum -- Controlled by audio" },
+//33  CC4P 7+W	{ lineSpectrumSmooth,			"Line Spectrum Smooth -- Controlled by audio" },
+//34  CC4P 7+W	{ FunkyNoise1,				"Funky Noise 1 -- Controlled by audio" },
+//35  CC4P 7+W	{ FunkyNoise2,				"Funky Noise 2 -- Controlled by audio" },
+//36  CC4P 7+W	{ FunkyNoise3,				"Funky Noise 3 -- Controlled by audio" },
+//37  CC4P 7+W	{ FunkyNoise4,				"Funky Noise 4 -- Controlled by audio" },
+//38  CC4P 7+W	{ FunkyNoise5,				"Funky Noise 5 -- Controlled by audio" }
+
 
 //// Pattern list for strip or matrix of LESS THAN 4x4
-//// CC2 WITHOUT Audio analyzer
-//// CC4P WITH Audio analyzer
+//// CC2 = WITHOUT Audio analyzer
+//// CC4P = WITH Audio analyzer
 
 //0 	CC2	{ fireBasic,			"Fire -- Uses Fire Palettes, Speed, Cooling, Sparking" },
 //0	CC4P	{ fireAudio,			"Audio Activated Fire -- Uses Fire Palettes, Speed" },
@@ -57,11 +69,3 @@
 //15	CC4P	{ spectrumWaves2,		"Spectrum Waves 2 -- Controlled by audio" },		// Good (center radiating toward ends)
 //16	CC4P	{ spectrumWaves3,		"Spectrum Waves 3 -- Controlled by audio" },		// Good (center radiating toward ends)
 //17	CC4P	{ drawVU,			"VU -- Controlled by audio" },				// OK (ends radiating toward center)
-//18	CC4P	{ analyzerPeakColumns,		"Analyzer Peak Columns -- Controlled by audio" },	// Good (bottom up)
-//19	CC4P	{ beatWaves,			"BeatWaves -- Controlled by audio" },			// Good (center radiating toward ends)
-//24	CC4P	{ FunkyNoise1,			"Funky Noise 1 -- Controlled by audio" },		// Good (Clear visualization)
-//25	CC4P	{ FunkyNoise2,			"Funky Noise 2 -- Controlled by audio" },		// Good (Clear visualization)
-//26	CC4P	{ FunkyNoise3,			"Funky Noise 3 -- Controlled by audio" },		// Ok (Slowly Changing)
-//27	CC4P	{ FunkyNoise4,			"Funky Noise 4 -- Controlled by audio" },		// OK (Changes very quickly and a little flashy)
-//28	CC4P	{ FunkyNoise5,			"Funky Noise 5 -- Controlled by audio" }		// Good (Changes quickly but smoothly)
-

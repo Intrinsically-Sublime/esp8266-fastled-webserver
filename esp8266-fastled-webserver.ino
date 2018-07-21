@@ -157,7 +157,7 @@ const uint16_t matrixTotal = MATRIX_WIDTH * MATRIX_HEIGHT;	// Total size of the 
 // For best battery life MILLI_AMPS = NUM_LEDS * 3 (gives poor white) Better white MILLI_AMPS = NUM_LEDS * 9 (poor battery life)
 #define MILLI_AMPS         NUM_LEDS * 3	// IMPORTANT: set the max MILLI_AMPS no greater than your power supply (1A = 1000mA)
 #define VOLTAGE		   4.2		//Set voltage used 4.2v for Lipo or 5v for 5V power supply or USB battery bank
-#define WIFI_MAX_POWER     1		//Set wifi output power between 0 and 20.5db (default around 19db)
+#define WIFI_MAX_POWER     2		//Set wifi output power between 0 and 20.5db (default around 19db)
 
 const uint16_t centerLED = NUM_LEDS/2;
 
@@ -169,7 +169,10 @@ const uint16_t centerLED = NUM_LEDS/2;
 	#define TEXT_MATRIX
 #endif
 
-// The 32bit version of our coordinates
+#if MATRIX_WIDTH > 6
+	#define SPECTRAL_MATRIX
+#endif
+
 static uint16_t noiseX;
 static uint16_t noiseY;
 static uint16_t noiseZ;
@@ -232,7 +235,14 @@ const CRGBPalette16 LithiumFireColors_p = CRGBPalette16(CRGB::Black, CRGB::FireB
 uint8_t currentPatternIndex = 0; // Index number of which pattern is current
 uint8_t autoplay = 0;
 
-uint8_t autoplayDuration = 60;
+bool enablePlaylists = false;
+#if defined AUDIO_PLAYLIST
+bool currentPlaylist = true;
+#else
+bool currentPlaylist = false;
+#endif
+
+uint8_t autoplayDuration = 30;		// Autoplay duration reset to this every power cycle
 unsigned long autoPlayTimeout = 0;
 
 uint8_t currentPaletteIndex = 0;
@@ -327,13 +337,16 @@ typedef PatternAndName PatternAndNameList[];
 	#define STORM_POSITION 3	// Used to keep track of where storm is in the pattern list
 	#define TWINKLE_POSITION 14	// Used to keep track of where twinkle is in the pattern list
 	#define SOLID_POSITION 15	// Used to keep track of where solid is in the pattern list
+	#define FIRST_AUDIO_PATTERN 16
 #else
 	#define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
 	#define RAIN_POSITION 99	// Unused
 	#define STORM_POSITION 99	// Unused
 	#define TWINKLE_POSITION 10	// Used to keep track of where twinkle is in the pattern list
 	#define SOLID_POSITION 11	// Used to keep track of where solid is in the pattern list
+	#define FIRST_AUDIO_PATTERN 12
 #endif
+
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 PatternAndNameList patterns = {
@@ -349,6 +362,7 @@ PatternAndNameList patterns = {
 	{ stormyRain,			"Storm -- Uses Speed, Intensity, Color Picker" },
 	{ theMatrix,			"The Matrix -- Uses Speed, Intensity" },
 	#endif
+
 	{ pride,			"Pride -- Uses Speed" },
 	{ rainbow,			"Rainbow" },
 	{ rainbowWithGlitter,		"Rainbow w/ Glitter" },
@@ -358,25 +372,35 @@ PatternAndNameList patterns = {
 	{ sinelon,			"Sinelon -- Uses General Palettes, Speed" },
 	{ bpm,				"Beat -- Uses General Palettes, Speed" },
 	{ juggle,			"Juggle -- Uses Speed" },
-
-	// TwinkleFOX with palettes
 	{ drawTwinkles,			"TwinkleFOX -- Uses Twinkle Palettes, Speed, Intensity" },
 	{ showSolidColor,		"Solid Color -- Uses Color Picker" }
 
 	#ifdef CC4P
-	,{ spectrumWaves,		"Spectrum Waves -- Controlled by audio" },		// Good (center radiating toward ends)
-	{ spectrumPaletteWaves,		"Spectrum Palette Waves -- Controlled by audio" },	// Good (center flows towards ends)
-	{ spectrumPaletteWaves2,	"Spectrum Palette Waves 2 -- Controlled by audio" },	// OK (center radiating outwards)
-	{ spectrumWaves2,		"Spectrum Waves 2 -- Controlled by audio" },		// Good (center radiating toward ends)
-	{ spectrumWaves3,		"Spectrum Waves 3 -- Controlled by audio" },		// Good (center radiating toward ends)
-	{ drawVU,			"VU -- Controlled by audio" },				// OK (ends radiating toward center)
-	{ analyzerPeakColumns,		"Analyzer Peak Columns -- Controlled by audio" },	// Good (bottom up)
-	{ beatWaves,			"BeatWaves -- Controlled by audio" },			// Good (center radiating toward ends)
-	{ FunkyNoise1,			"Funky Noise 1 -- Controlled by audio" },		// Good (Clear visualization)
-	{ FunkyNoise2,			"Funky Noise 2 -- Controlled by audio" },		// Good (Clear visualization)
-	{ FunkyNoise3,			"Funky Noise 3 -- Controlled by audio" },		// Ok (Slowly Changing)
-	{ FunkyNoise4,			"Funky Noise 4 -- Controlled by audio" },		// OK (Changes very quickly and a little flashy)
-	{ FunkyNoise5,			"Funky Noise 5 -- Controlled by audio" }		// Good (Changes quickly but smoothly)
+	,{ spectrumWaves1,			"Spectrum Waves 1 -- Controlled by audio" },		// Good (center radiating toward ends)
+	{ spectrumWaves2,			"Spectrum Waves 2 -- Controlled by audio" },		// Good (center radiating toward ends)
+	{ spectrumWaves3,			"Spectrum Waves 3 -- Controlled by audio" },		// Good (center radiating toward ends)
+	{ spectrumPaletteWaves1,		"Spectrum Palette Waves 1 -- Controlled by audio" },	// Good (center flows towards ends)
+	{ spectrumPaletteWaves2,		"Spectrum Palette Waves 2 -- Controlled by audio" },	// OK (center radiating outwards)
+	{ drawVU,				"VU -- Controlled by audio" }				// OK (ends radiating toward center)
+	#ifdef SPECTRAL_MATRIX
+	,{ analyzerPeakColumns,			"Analyzer Peak Columns -- Controlled by audio" },	// Good (bottom up)
+	{ analyzerPeakColumnsSpread,		"Analyzer Peak Columns Spread -- Controlled by audio" },// Good (bottom up)
+	{ analyzerCenterInVertFilled,		"Analyzer CIVF -- Controlled by audio" },		// Ok
+	{ analyzerCenterInVertSpreadFilled,	"Analyzer CIVSF -- Controlled by audio" },		// Good
+	{ analyzerCenterInVertSpreadSmoothFilled,	"Analyzer CIVSSF -- Controlled by audio" },	// Ok (slow)
+	{ analyzerCenterInVertSpread,		"Analyzer CIVS -- Controlled by audio" },		// Good
+	{ analyzerCenterInVertSpreadSmooth,	"Analyzer CIVSS -- Controlled by audio" },		// Ok (slow)
+	{ analyzerCenterOutVertFilled,		"Analyzer COVF -- Controlled by audio" },		// Ok
+	{ analyzerCenterOutVertSpreadFilled,	"Analyzer COVSF -- Controlled by audio" },		// Good
+	{ analyzerCenterOutVertSpreadSmoothFilled,	"Analyzer COVSSF -- Controlled by audio" },	// Ok
+	{ lineSpectrumSharp,			"Line Spectrum -- Controlled by audio" },		// Good
+	{ lineSpectrumSmooth,			"Line Spectrum Smooth -- Controlled by audio" },	// Good
+	{ FunkyNoise1,				"Funky Noise 1 -- Controlled by audio" },		// Good (Clear visualization)
+	{ FunkyNoise2,				"Funky Noise 2 -- Controlled by audio" },		// Good (Clear visualization)
+	{ FunkyNoise3,				"Funky Noise 3 -- Controlled by audio" },		// Ok (Slowly Changing)
+	{ FunkyNoise4,				"Funky Noise 4 -- Controlled by audio" },		// OK (Changes very quickly and a little flashy)
+	{ FunkyNoise5,				"Funky Noise 5 -- Controlled by audio" }		// Good (Changes quickly but smoothly)
+	#endif
 	#endif
 };
 
@@ -428,7 +452,6 @@ void setup() {
 	FastLED.show();
 
 	EEPROM.begin(512);
-	loadSettings();
 
 	#ifdef SERIAL_OUTPUT
 	Serial.println();
@@ -472,7 +495,11 @@ void setup() {
 		setupWiFi();
 	}
 
+	setAutoplayDuration(autoplayDuration);
+
 	autoPlayTimeout = millis() + (autoplayDuration * 1000);
+
+	loadSettings();
 
 	// Initialize noise coordinates to some random values
 	noiseX = random16();
@@ -776,21 +803,6 @@ void loop() {
 	FastLED.delay(6-(NUM_LEDS_PER_STRIP*0.03));
 	#endif
 
-	#ifndef CC2
-	currentMillis = millis(); // save the current timer value
-
-	// analyze the audio input
-	if (currentMillis - audioMillis > AUDIODELAY) {
-	audioMillis = currentMillis;
-	readAudio();
-	}
-
-	// Add entropy to random number generator; we use a lot of it.
-	random16_add_entropy(analogRead(MSGEQ7_AUDIO_PIN));
-	#else
-	random16_add_entropy(analogRead(random8()));
-	#endif
-
 //	dnsServer.processNextRequest();
 	webSocketsServer.loop();
 	webServer.handleClient();
@@ -802,19 +814,28 @@ void loop() {
 	}
 	#endif
 
+	if (power == 0) {
+		fill_solid(leds, NUM_LEDS, CRGB::Black);
+		FastLED.show();
+		// FastLED.delay(15);
+		return;
+	}
+
+	#ifndef CC2
+	readAudio();
+
+	// Add entropy to random number generator; we use a lot of it.
+	random16_add_entropy(analogRead(MSGEQ7_AUDIO_PIN));
+	#else
+	random16_add_entropy(analogRead(random8()));
+	#endif
+
 	// Only write to EEPROM every N minutes and only when data has been changed to prevent wear on the EEPROM
 	EVERY_N_MINUTES(1) {
 		if (eepromChanged) {
 			EEPROM.commit();
 			eepromChanged = false;
 		}
-	}
-
-	if (power == 0) {
-		fill_solid(leds, NUM_LEDS, CRGB::Black);
-		FastLED.show();
-		// FastLED.delay(15);
-		return;
 	}
 
 //	 EVERY_N_SECONDS(10) {
@@ -841,14 +862,14 @@ void loop() {
 	}
 
 	if (autoplay && (millis() > autoPlayTimeout)) {
-		#ifdef CUSTOM_PLAYLIST
-		adjustPlaylistPattern();
-		#else
-		adjustPattern(true);
-		if (currentPatternIndex == SOLID_POSITION) { // Skip the solid color when in autoplay
+		if (enablePlaylists) {
+			adjustPlaylistPattern();
+		} else {
 			adjustPattern(true);
+			if (currentPatternIndex == SOLID_POSITION) { // Skip the solid color when in autoplay
+				adjustPattern(true);
+			}
 		}
-		#endif
 		autoRotatePalettes();
 		autoPlayTimeout = millis() + (autoplayDuration * 1000);
 	}
@@ -1011,14 +1032,22 @@ void adjustPattern(bool up)
 	broadcastInt("pattern", currentPatternIndex);
 }
 
-#ifdef CUSTOM_PLAYLIST
 void adjustPlaylistPattern()
 {
-	currentPlaylistIndex = (currentPlaylistIndex+1)%playlistCount;
-	currentPatternIndex = playlist[currentPlaylistIndex];
-	broadcastInt("pattern", currentPatternIndex);
+	if (currentPlaylist) {
+		#ifdef AUDIO_PLAYLIST
+		currentAudioPlaylistIndex = (currentAudioPlaylistIndex+1)%audioPlaylistCount;
+		currentPatternIndex = pgm_read_byte(audioPlaylist + currentAudioPlaylistIndex);
+		broadcastInt("pattern", currentPatternIndex);
+		#endif
+	} else {
+		#ifdef CUSTOM_PLAYLIST
+		currentPlaylistIndex = (currentPlaylistIndex+1)%playlistCount;
+		currentPatternIndex = pgm_read_byte(playlist + currentPlaylistIndex);
+		broadcastInt("pattern", currentPatternIndex);
+		#endif
+	}
 }
-#endif
 
 // change color palettes once each time through patterns when in autoplay mode
 void autoRotatePalettes()
@@ -1208,8 +1237,6 @@ void fireBasic()
 void fire(uint8_t cool, uint8_t spark)
 {
 	FastLED.delay(1000/map8(speed,30,110));
-	// Add entropy to random number generator; we use a lot of it.
-	random16_add_entropy(random(256));
 
 	CRGBPalette16 fire_p( CRGB::Black);
 

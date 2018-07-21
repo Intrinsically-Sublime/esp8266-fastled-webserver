@@ -20,9 +20,11 @@ It will work with any ESP8266 based controller.
 13) Rotate palettes after each time through all patterns in autoplay mode.
 14) Added Cylindrical option to wrap certain patterns around at the ends (Fireworks, Storm).
 15) Added blending to fire to smooth the animation.
-16) Physical button control. Up to 5 buttons and 15 function calls (Pattern+/-, Palette/Color+/-, Speed+/-, Brightness+/-, Power, Autoplay on/off, ~~WiFI on/off~~, ~~Audio on/off~~, ~~Scrolling Text on/off~~, ~~Unassigned~~, ~~Unassigned~~). The first 2 buttons are enough to control most features.
+16) Physical button control. Up to 5 buttons and 15 function calls (Pattern+/-, Palette/Color+/-, Speed+/-, Brightness+/-, Power, Autoplay on/off, WiFI on/off, Playlists on/off, Playlist Selection, ~~Scrolling Text on/off~~, ~~Unassigned~~). The first 2 buttons are enough to control most features.
 17) Intensity slider to control rain intensity and twinkle density.
 18) Custom playlist option for autoplay.
+19) Lots of audio patterns.
+20) Custom playlist just for Audio patterns
 
 #### Custom irregular XY map generator based on Garrett Maces
 https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
@@ -98,15 +100,15 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Settings
   * Color Picker -- Sets the color
 ---
-#### Spectrum Waves -- Colors radiate out from center pixel
-  * Audio controlled
----
-#### Spectrum Palette Waves -- Colors flows out from center pixel
+#### Spectrum Palette Waves 1 -- Colors flows out from center pixel
   * General Palettes -- See Palettes section below
   * Audio controlled
 ---
 #### Spectrum Palette Waves 2 -- Colors flows out from center pixel
   * General Palettes -- See Palettes section below
+  * Audio controlled
+---
+#### Spectrum Waves 1 -- Colors radiate out from center pixel
   * Audio controlled
 ---
 #### Spectrum Waves 2 -- Colors radiate out from center pixel
@@ -119,9 +121,6 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
   * Audio controlled
 ---
 #### Analyzer Peak Columns -- Vertical VU meter with slowly dropping peaks
-  * Audio controlled
----
-#### Beat Waves -- Colors radiate out from center pixel
   * Audio controlled
 ---
 #### Funky Noise -- XY Noise pattern manipulated by audio (Brightness varies quickly)
@@ -191,30 +190,29 @@ Features
 
 ToDo
 --------
-* Add bleeding patterns
 * Add scrolling text with input via web interface
 * Save settings in array to allow each pattern to have their own settings
-* Add reset for settings to default
+* Make playlists configurable via web interface
 
 Buttons
 --------
 ```
- 0 = Short press, 1 = Long press, 2 = Extra long press 5s+
+ 0 = Short press, 1 = Long press, 2 = Extra long press
 
-                 UP
-                 0 = Brightness++
-                 1 = Speed++
-                 2 = WiFi on/off
+                   UP
+                   0 = Brightness++
+                   1 = Speed++
+                   2 = WiFi on/off
 
- LEFT            CENTER            RIGHT
- 0 = Pattern--   0 = Text on/off   0 = Pattern++
- 1 = Color/Pal-- 1 = Audio on/off  1 = Color/Pal++
- 2 = Autoplay    2 = Unassigned    2 = LEDs on/off
+ LEFT              CENTER                RIGHT
+ 0 = Pattern--     0 = Playlist type     0 = Pattern++
+ 1 = Color/Pal--   1 = Playlists on/off  1 = Color/Pal++
+ 2 = Unassigned    2 = Autoplay on/off   2 = LEDs on/off
 
-                 DOWN
-                 0 = Brightness--
-                 1 = Speed--
-                 2 = Unassigned
+                   DOWN
+                   0 = Brightness--
+                   1 = Speed--
+                   2 = Unassigned
 ```
 
 Hardware

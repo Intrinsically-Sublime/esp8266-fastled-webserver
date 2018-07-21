@@ -26,7 +26,6 @@
 #define MSGEQ7_AUDIO_PIN A0
 #define MSGEQ7_STROBE_PIN 5
 #define MSGEQ7_RESET_PIN  16
-#define AUDIODELAY 0
 
 // Smooth/average settings
 #define SPECTRUMSMOOTH 0.08		// lower value = smoother
@@ -44,10 +43,9 @@
 float spectrumDecay[7] = {0};   	// holds time-averaged values
 float spectrumPeaks[7] = {0};   	// holds peak values
 
+uint8_t spectrumByte[7];		// holds 8-bit adjusted adc values
 uint8_t spectrumByteSmoothed[7];	// holds smoothed 8-bit adjusted adc values
-
-unsigned long currentMillis;		// store current loop's millis value
-unsigned long audioMillis;		// store time of last audio update
+uint8_t interpolatedSpectrum[MATRIX_WIDTH];
 
 void initializeAudio() {
 	pinMode(MSGEQ7_AUDIO_PIN, INPUT);
@@ -76,7 +74,7 @@ void readAudio() {
 	#endif
 
 	// cycle through each MSGEQ7 bin and read the analog values
-	for (byte i = 0; i < 7; i++) {
+	for (uint8_t i = 0; i < 7; i++) {
 
 		// set up the MSGEQ7
 		digitalWrite(MSGEQ7_STROBE_PIN, LOW);
@@ -114,6 +112,7 @@ void readAudio() {
 			spectrumPeaks[i] = spectrumPeaks[i] * (1.0 - PEAKDECAY);
 		}
 
+		spectrumByte[i] = spectrumValue/4;
 		spectrumByteSmoothed[i] = spectrumDecay[i]/4;
 	}
 
@@ -122,8 +121,6 @@ void readAudio() {
 	// Calculate audio levels for automatic gain
 	audioAvg = (1.0 - AGCSMOOTH) * audioAvg + AGCSMOOTH * (analogsum / 7.0);
 
-	uint8_t spectrumAvg = (analogsum / 7.0) / 4;
-
 	// Calculate gain adjustment factor
 	gainAGC = 270.0 / audioAvg;
 	if (gainAGC > GAINUPPERLIMIT) gainAGC = GAINUPPERLIMIT;
@@ -131,43 +128,182 @@ void readAudio() {
 	#endif
 }
 
-void analyzerPeakColumns()
+void interpolateSpectrum(uint8_t baseArray = 0)
+{
+	float step = (1.0 * (6))/(MATRIX_WIDTH-1);
+	uint8_t b1;
+	uint8_t b2;
+
+	for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+		float f1 = x * step;
+		uint8_t xx = f1;
+		f1 = f1 - xx;
+
+		if (baseArray == 0) {
+			b1 = spectrumByteSmoothed[xx];
+			b2 = spectrumByteSmoothed[xx+1];
+		} else if (baseArray == 1) {
+			b1 = spectrumByte[xx];
+			b2 = spectrumByte[xx+1];
+		} else if (baseArray == 2) {
+			b1 = spectrumPeaks[xx]/4;
+			b2 = spectrumPeaks[xx+1]/4;
+		}
+
+		if (x < MATRIX_WIDTH-1) {
+			interpolatedSpectrum[x] = (1-f1)*b1 + f1*b2;
+		} else {
+			interpolatedSpectrum[x] = b1; // prevent out of index error
+		}
+	}
+}
+
+void lineSpectrum(uint8_t smooth = 1)
+{
+	fadeToBlackBy( leds, NUM_LEDS, 24);
+	interpolateSpectrum(smooth);
+	uint8_t position;
+
+	for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+		if (smooth == 1) {
+			position = map(interpolatedSpectrum[x], 0, 420, 0, MATRIX_HEIGHT-1)+((MATRIX_HEIGHT*18)/100);
+		} else {
+			position = map(interpolatedSpectrum[x], 0, 310, 0, MATRIX_HEIGHT-1)+((MATRIX_HEIGHT*16)/100);
+		}
+		leds[XY(x,position)] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 255);
+	}
+}
+
+void lineSpectrumSmooth()
+{
+	lineSpectrum(0);
+}
+
+void lineSpectrumSharp()
+{
+	lineSpectrum(1);
+}
+
+void analyzerCenterVert(bool outwards, bool interpolate, uint8_t smooth = 0, bool filled = false)
+{
+	fadeToBlackBy( leds, NUM_LEDS, 24);
+	uint8_t columnHeight;
+
+	for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
+
+		if (interpolate) {
+			interpolateSpectrum(smooth);
+			columnHeight = map(interpolatedSpectrum[x], 0, 310, 0, MATRIX_HEIGHT-1);
+		} else {
+			columnHeight = map(spectrumByteSmoothed[x%7], 0, 310, 0, MATRIX_HEIGHT-1);
+		}
+		
+		uint8_t columnStart = MATRIX_HEIGHT - columnHeight;
+
+		if (filled) {
+			if (outwards) {
+				columnStart = columnStart / 2;
+
+				for (uint8_t y = columnStart; y < columnStart+columnHeight; y++) {
+					leds[XY(x,y)] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 128);
+				}
+			} else {
+				for (uint8_t y = 0; y < columnHeight/2; y++) {
+					leds[XY(x,y)] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 128);
+				}
+
+				for (uint8_t y = columnStart+(columnHeight/2); y < MATRIX_HEIGHT; y++) {
+					leds[XY(x,y)] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 128);
+				}
+			}
+		} else {
+			if (outwards) {
+				columnStart = columnStart / 2;
+				leds[XY(x,columnStart)] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 128);
+				leds[XY(x,columnStart+columnHeight)] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 128);
+			} else {
+				leds[XY(x,columnHeight/2)] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 128);
+				leds[XY(x,columnStart+(columnHeight/2))] = CHSV(((x * (255/MATRIX_WIDTH))+gHue)%255, 255, 128);
+			}
+		}
+	}
+}
+
+void analyzerCenterInVertFilled()
+{
+	analyzerCenterVert(false, false, 0, true);
+}
+
+void analyzerCenterInVertSpreadFilled()
+{
+	analyzerCenterVert(false, true, 1, true);
+}
+
+void analyzerCenterInVertSpreadSmoothFilled()
+{
+	analyzerCenterVert(false, true, 0, true);
+}
+
+void analyzerCenterInVertSpread()
+{
+	analyzerCenterVert(false, true, 1, false);
+}
+
+void analyzerCenterInVertSpreadSmooth()
+{
+	analyzerCenterVert(false, true, 0, false);
+}
+
+void analyzerCenterOutVertFilled()
+{
+	analyzerCenterVert(true, false, 0, true);
+}
+
+void analyzerCenterOutVertSpreadFilled()
+{
+	analyzerCenterVert(true, true, 1, true);
+}
+
+void analyzerCenterOutVertSpreadSmoothFilled()
+{
+	analyzerCenterVert(true, true, 0, true);
+}
+
+void analyzerPeakColumnsFunc(bool interpolate = false)
 {
 	fill_solid(leds, NUM_LEDS, CRGB::Black);
 
+	for (uint8_t x = 0; x < MATRIX_WIDTH; x++) {
 
-	#if MATRIX_WIDTH < 2
-		#define APC_WIDTH 7
-		const unsigned int columnSize = NUM_LEDS / 7;
-	#elif MATRIX_WIDTH < 7
-		#define APC_WIDTH MATRIX_WIDTH
-		const unsigned int columnSize = MATRIX_HEIGHT;
-	#else
-		#define APC_WIDTH MATRIX_WIDTH
-		const unsigned int columnSize = MATRIX_HEIGHT;
-	#endif
+		uint8_t columnHeight;
+		uint8_t peakHeight;
 
-	for (byte i = 0; i < APC_WIDTH; i++) {
-		unsigned int columnStart = i * columnSize;
-		unsigned int columnEnd = columnStart + columnSize;
-
-		if (columnEnd >= NUM_LEDS) columnEnd = NUM_LEDS - 1;
-
-		unsigned int columnHeight = map(spectrumByteSmoothed[i%7], 0, 420, 0, columnSize-1);
-		unsigned int peakHeight = map(spectrumPeaks[i%7], 0, 1023, 0, columnSize-1);
-
-		for (unsigned int j = columnStart; j < columnStart + columnHeight; j++) {
-			if (j < NUM_LEDS && j <= columnEnd) {
-				leds[getXyFromLedNum(j)] = CHSV(((i * (255/APC_WIDTH))+gHue)%255, 255, 128);
-			}
+		if (interpolate) {
+			interpolateSpectrum(0);
+			columnHeight = map(interpolatedSpectrum[x], 0, 512, 0, MATRIX_HEIGHT-1);
+			interpolateSpectrum(2);
+			peakHeight = map(interpolatedSpectrum[x], 0, 255, 0, MATRIX_WIDTH-1);
+		} else {
+			columnHeight = map(spectrumByteSmoothed[x%7], 0, 512, 0, MATRIX_HEIGHT-1);
+			peakHeight = map(spectrumPeaks[x%7], 0, 1023, 0, MATRIX_WIDTH-1);
 		}
 
-		unsigned int k = columnStart + peakHeight;
-
-		if (k < NUM_LEDS && k <= columnEnd) {
-			leds[getXyFromLedNum(k)] = CHSV(((i * (255/APC_WIDTH))+gHue)%255, 255, 255);
+		for (uint8_t y = 0; y < columnHeight; y++) {
+			leds[XY(x,y)] = CHSV(255-((columnHeight-y)*(420/MATRIX_HEIGHT)), 255, 128);
 		}
+
+		leds[XY(x,peakHeight)] = CHSV(255,255,255);
 	}
+}
+
+void analyzerPeakColumns()
+{
+	analyzerPeakColumnsFunc(false);
+}
+
+void analyzerPeakColumnsSpread()
+{
+	analyzerPeakColumnsFunc(true);
 }
 
 void fireAudio()	// fire(cool, spark);
@@ -175,229 +311,94 @@ void fireAudio()	// fire(cool, spark);
 	fire(map8(spectrumPeaks[1], 42, 128), map8(spectrumPeaks[3], 10, 42));
 }
 
-// Attempt at beat detection
-byte beatTriggered = 0;
-#define beatLevel 20.0
-#define beatDeadzone 30.0
-#define beatDelay 50
-float lastBeatVal = 0;
-byte beatDetect() {
-  static float beatAvg = 0;
-  static unsigned long lastBeatMillis;
-  float specCombo = (spectrumDecay[0] + spectrumDecay[1]) / 2.0;
-  beatAvg = (1.0 - AGCSMOOTH) * beatAvg + AGCSMOOTH * specCombo;
-
-  if (lastBeatVal < beatAvg) lastBeatVal = beatAvg;
-  if ((specCombo - beatAvg) > beatLevel && beatTriggered == 0 && currentMillis - lastBeatMillis > beatDelay) {
-    beatTriggered = 1;
-    lastBeatVal = specCombo;
-    lastBeatMillis = currentMillis;
-    return 1;
-  } else if ((lastBeatVal - specCombo) > beatDeadzone) {
-    beatTriggered = 0;
-    return 0;
-  } else {
-    return 0;
-  }
-}
-
-void fade_down(byte value) {
-  for (unsigned int i = 0; i < NUM_LEDS; i++)
-  {
-    leds[i].fadeToBlackBy(value);
-  }
-}
-
-void spectrumPaletteWaves()
+void spectrumPaletteWaves(uint8_t version = 1)
 {
-//  fade_down(1);
+	CRGB color6;
+	CRGB color5;
+	CRGB color1;
 
-  CRGB color6 = ColorFromPalette(gCurrentPalette, spectrumByteSmoothed[6], spectrumByteSmoothed[6]);
-  CRGB color5 = ColorFromPalette(gCurrentPalette, spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[5] / 8);
-  CRGB color1 = ColorFromPalette(gCurrentPalette, spectrumByteSmoothed[1] / 2, spectrumByteSmoothed[1] / 2);
+	if (version == 1) {
+		color6 = ColorFromPalette(gCurrentPalette, spectrumByteSmoothed[6], spectrumByteSmoothed[6]);
+		color5 = ColorFromPalette(gCurrentPalette, spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[5] / 8);
+		color1 = ColorFromPalette(gCurrentPalette, spectrumByteSmoothed[1] / 2, spectrumByteSmoothed[1] / 2);
+	} else if (version == 2) {
+		color6 = ColorFromPalette(palettes[currentPaletteIndex], 255 - spectrumByteSmoothed[6], spectrumByteSmoothed[6]);
+		color5 = ColorFromPalette(palettes[currentPaletteIndex], 255 - spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[5] / 8);
+		color1 = ColorFromPalette(palettes[currentPaletteIndex], 255 - spectrumByteSmoothed[1] / 2, spectrumByteSmoothed[1] / 2);
+	}
 
-  CRGB color = nblend(color6, color5, 256 / 8);
-  color = nblend(color, color1, 256 / 2);
+	CRGB color = nblend(color6, color5, 256 / 8);
+	color = nblend(color, color1, 256 / 2);
 
-  leds[getXyFromLedNum(centerLED)] = color;
-  leds[getXyFromLedNum(centerLED)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
+	leds[getXyFromLedNum(centerLED)] = color;
+	leds[getXyFromLedNum(centerLED)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
 
-  leds[getXyFromLedNum(centerLED - 1)] = color;
-  leds[getXyFromLedNum(centerLED - 1)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
+	leds[getXyFromLedNum(centerLED - 1)] = color;
+	leds[getXyFromLedNum(centerLED - 1)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
 
-  //move to the left
-  for (unsigned int i = NUM_LEDS - 1; i > centerLED; i--) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
-  }
-  // move to the right
-  for (unsigned int i = 0; i < centerLED; i++) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
-  }
+	//move to the left
+	for (uint16_t i = NUM_LEDS - 1; i > centerLED; i--) {
+		leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
+	}
+	// move to the right
+	for (uint16_t i = 0; i < centerLED; i++) {
+		leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
+	}
+}
+
+void spectrumPaletteWaves1()
+{
+	spectrumPaletteWaves(1);
 }
 
 void spectrumPaletteWaves2()
 {
-//  fade_down(1);
-
-  CRGBPalette16 palette = palettes[currentPaletteIndex];
-
-  CRGB color6 = ColorFromPalette(palette, 255 - spectrumByteSmoothed[6], spectrumByteSmoothed[6]);
-  CRGB color5 = ColorFromPalette(palette, 255 - spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[5] / 8);
-  CRGB color1 = ColorFromPalette(palette, 255 - spectrumByteSmoothed[1] / 2, spectrumByteSmoothed[1] / 2);
-
-  CRGB color = nblend(color6, color5, 256 / 8);
-  color = nblend(color, color1, 256 / 2);
-
-  leds[getXyFromLedNum(centerLED)] = color;
-  leds[getXyFromLedNum(centerLED)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
-
-  leds[getXyFromLedNum(centerLED - 1)] = color;
-  leds[getXyFromLedNum(centerLED - 1)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
-
-  //move to the left
-  for (unsigned int i = NUM_LEDS - 1; i > centerLED; i--) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
-  }
-  // move to the right
-  for (unsigned int i = 0; i < centerLED; i++) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
-  }
+	spectrumPaletteWaves(2);
 }
 
-void spectrumWaves()
+void spectrumWaves(uint8_t version = 1)
 {
-  fade_down(2);
+	fadeToBlackBy( leds, NUM_LEDS, 2);
+	CRGB color;
 
-  CRGB color = CRGB(spectrumByteSmoothed[6], spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[1] / 2);
+	if (version == 1) {
+		color = CRGB(spectrumByteSmoothed[6], spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[1] / 2);
+	} else if (version == 2) {
+		color = CRGB(spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[6], spectrumByteSmoothed[1] / 2);
+	} else if (version == 3) {
+		color = CRGB(spectrumByteSmoothed[1] / 2, spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[6]);
+	}
 
-  leds[getXyFromLedNum(centerLED)] = color;
-  leds[getXyFromLedNum(centerLED)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
+	leds[getXyFromLedNum(centerLED)] = color;
+	leds[getXyFromLedNum(centerLED)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
 
-  leds[getXyFromLedNum(centerLED - 1)] = color;
-  leds[getXyFromLedNum(centerLED - 1)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
+	leds[getXyFromLedNum(centerLED - 1)] = color;
+	leds[getXyFromLedNum(centerLED - 1)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
 
-  //move to the left
-  for (unsigned int i = NUM_LEDS - 1; i > centerLED; i--) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
-  }
-  // move to the right
-  for (unsigned int i = 0; i < centerLED; i++) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
-  }
+	//move to the left
+	for (uint16_t i = NUM_LEDS - 1; i > centerLED; i--) {
+		leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
+	}
+	// move to the right
+	for (uint16_t i = 0; i < centerLED; i++) {
+		leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
+	}
+}
+
+void spectrumWaves1()
+{
+	spectrumWaves(1);
 }
 
 void spectrumWaves2()
 {
-  fade_down(2);
-
-  CRGB color = CRGB(spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[6], spectrumByteSmoothed[1] / 2);
-
-  leds[getXyFromLedNum(centerLED)] = color;
-  leds[getXyFromLedNum(centerLED)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
-
-  leds[getXyFromLedNum(centerLED - 1)] = color;
-  leds[getXyFromLedNum(centerLED - 1)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
-
-  //move to the left
-  for (unsigned int i = NUM_LEDS - 1; i > centerLED; i--) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
-  }
-  // move to the right
-  for (unsigned int i = 0; i < centerLED; i++) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
-  }
+	spectrumWaves(2);
 }
 
 void spectrumWaves3()
 {
-  fade_down(2);
-
-  CRGB color = CRGB(spectrumByteSmoothed[1] / 2, spectrumByteSmoothed[5] / 8, spectrumByteSmoothed[6]);
-
-  leds[getXyFromLedNum(centerLED)] = color;
-  leds[getXyFromLedNum(centerLED)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
-
-  leds[getXyFromLedNum(centerLED - 1)] = color;
-  leds[getXyFromLedNum(centerLED - 1)].fadeToBlackBy(spectrumByteSmoothed[3] / 12);
-
-  //move to the left
-  for (unsigned int i = NUM_LEDS - 1; i > centerLED; i--) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
-  }
-  // move to the right
-  for (unsigned int i = 0; i < centerLED; i++) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
-  }
+	spectrumWaves(3);
 }
-
-//void analyzerColumns()
-//{
-//  fill_solid(leds, NUM_LEDS, CRGB::Black);
-
-//  const unsigned int columnSize = MATRIX_HEIGHT;
-
-//  for (byte i = 0; i < 7; i++) {
-//    unsigned int columnStart = i * columnSize;
-//    unsigned int columnEnd = columnStart + columnSize;
-
-//    if (columnEnd >= NUM_LEDS) columnEnd = NUM_LEDS - 1;
-
-//    unsigned int columnHeight = map8(spectrumByteSmoothed[i], 1, columnSize);
-
-//    for (unsigned int j = columnStart; j < columnStart + columnHeight; j++) {
-//      if (j >= NUM_LEDS || j >= columnEnd)
-//        continue;
-
-//      leds[NUM_LEDS-1-j] = CHSV(i * 40, 255, 255);
-//    }
-//  }
-//}
-
-//void analyzerPeakColumns()
-//{
-//  fill_solid(leds, NUM_LEDS, CRGB::Black);
-
-//  const unsigned int columnSize = MATRIX_HEIGHT;
-
-//  for (byte i = 0; i < 7; i++) {
-//    unsigned int columnStart = i * columnSize;
-//    unsigned int columnEnd = columnStart + columnSize;
-
-//    if (columnEnd >= NUM_LEDS) columnEnd = NUM_LEDS - 1;
-
-//    unsigned int columnHeight = map(spectrumByteSmoothed[i], 0, 1023, 0, columnSize);
-//    unsigned int peakHeight = map(spectrumPeaks[i], 0, 1023, 0, columnSize);
-
-//    for (unsigned int j = columnStart; j < columnStart + columnHeight; j++) {
-//      if (j < NUM_LEDS && j <= columnEnd) {
-//        leds[j] = CHSV(i * 40, 255, 128);
-//      }
-//    }
-
-//    unsigned int k = columnStart + peakHeight;
-//    if (k < NUM_LEDS && k <= columnEnd)
-//      leds[k] = CHSV(i * 40, 255, 255);
-//  }
-//}
-
-void beatWaves()
-{
-  fade_down(2);
-
-  if (beatDetect()) {
-    leds[getXyFromLedNum(centerLED)] = CRGB::Red;
-  }
-
-  //move to the left
-  for (unsigned int i = NUM_LEDS - 1; i > centerLED; i--) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
-  }
-  // move to the right
-  for (unsigned int i = 0; i < centerLED; i++) {
-    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
-  }
-}
-
 
 #define VUFadeFactor 5
 #define VUScaleFactor 2.0
@@ -424,3 +425,49 @@ void drawVU() {
     leds[getXyFromLedNum(NUM_LEDS - x - 1)] = pixelColor;
   }
 }
+
+///////////// OLD UNUSED
+
+//// Attempt at beat detection
+//uint8_t beatTriggered = 0;
+//#define beatLevel 20.0
+//#define beatDeadzone 30.0
+//#define beatDelay 50
+//float lastBeatVal = 0;
+//uint8_t beatDetect() {
+//  static float beatAvg = 0;
+//  static unsigned long lastBeatMillis;
+//  float specCombo = (spectrumDecay[0] + spectrumDecay[1]) / 2.0;
+//  beatAvg = (1.0 - AGCSMOOTH) * beatAvg + AGCSMOOTH * specCombo;
+
+//  if (lastBeatVal < beatAvg) lastBeatVal = beatAvg;
+//  if ((specCombo - beatAvg) > beatLevel && beatTriggered == 0 && millis() - lastBeatMillis > beatDelay) {
+//    beatTriggered = 1;
+//    lastBeatVal = specCombo;
+//    lastBeatMillis = millis();
+//    return 1;
+//  } else if ((lastBeatVal - specCombo) > beatDeadzone) {
+//    beatTriggered = 0;
+//    return 0;
+//  } else {
+//    return 0;
+//  }
+//}
+
+//void beatWaves()
+//{
+//  fadeToBlackBy( leds, NUM_LEDS, 2);
+
+//  if (beatDetect()) {
+//    leds[getXyFromLedNum(centerLED)] = CRGB::Red;
+//  }
+
+//  //move to the left
+//  for (unsigned int i = NUM_LEDS - 1; i > centerLED; i--) {
+//    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i - 1)];
+//  }
+//  // move to the right
+//  for (unsigned int i = 0; i < centerLED; i++) {
+//    leds[getXyFromLedNum(i)] = leds[getXyFromLedNum(i + 1)];
+//  }
+//}
