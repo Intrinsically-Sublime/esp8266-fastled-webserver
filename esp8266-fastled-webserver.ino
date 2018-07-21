@@ -337,14 +337,12 @@ typedef PatternAndName PatternAndNameList[];
 	#define STORM_POSITION 3	// Used to keep track of where storm is in the pattern list
 	#define TWINKLE_POSITION 14	// Used to keep track of where twinkle is in the pattern list
 	#define SOLID_POSITION 15	// Used to keep track of where solid is in the pattern list
-	#define FIRST_AUDIO_PATTERN 16
 #else
 	#define FIRE_POSITION 0		// Used to keep track of where fire is in the pattern list
 	#define RAIN_POSITION 99	// Unused
 	#define STORM_POSITION 99	// Unused
 	#define TWINKLE_POSITION 10	// Used to keep track of where twinkle is in the pattern list
 	#define SOLID_POSITION 11	// Used to keep track of where solid is in the pattern list
-	#define FIRST_AUDIO_PATTERN 12
 #endif
 
 
