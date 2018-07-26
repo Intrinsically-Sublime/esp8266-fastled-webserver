@@ -122,21 +122,42 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 		#define XorY MATRIX_HEIGHT
 	#endif
 
+	uint16_t pixNum;
+
 	#ifdef SERPENTINE
 		if(x%2 == 0) {
-			return (x * XorY) + y;
+			pixNum = (x * XorY) + y;
 		} else {
-			return (x * XorY) + ((XorY - 1) - y);
+			pixNum = (x * XorY) + ((XorY - 1) - y);
 		}
 	#elif defined IRREGULAR_MATRIX
 		#if NUM_LEDS < 256
-			return pgm_read_byte(XYTable + ((y * MATRIX_WIDTH) + x));
+			pixNum = pgm_read_byte(XYTable + ((y * MATRIX_WIDTH) + x));
 		#else
-			return pgm_read_word(XYTable + ((y * MATRIX_WIDTH) + x));
+			pixNum = pgm_read_word(XYTable + ((y * MATRIX_WIDTH) + x));
 		#endif
 	#else
-		return (x * XorY) + y;
+		pixNum = (x * XorY) + y;
 	#endif
+
+	#if defined FIBEROPTIC_COLUMN
+		if (x == FIBEROPTIC_COLUMN) {
+			leds[pixNum].maximizeBrightness();
+		}
+	#elif defined FIBEROPTIC_ROW
+		if (y == FIBEROPTIC_ROW) {
+			leds[pixNum].maximizeBrightness();
+		}
+	#elif defined FIBEROPTIC_ARRAY
+		for (int p = 0; p < fiberopticCount; p++) {
+			if (pixNum == fiberopticLEDs[p]) {
+				leds[pixNum].maximizeBrightness();
+				continue;
+			}
+		}
+	#endif
+
+	return pixNum;
 }
 
 int getXyFromLedNum(int ledNum) {
@@ -155,7 +176,9 @@ const uint16_t matrixTotal = MATRIX_WIDTH * MATRIX_HEIGHT;	// Total size of the 
 #endif
 
 // For best battery life MILLI_AMPS = NUM_LEDS * 3 (gives poor white) Better white MILLI_AMPS = NUM_LEDS * 9 (poor battery life)
-#define MILLI_AMPS         NUM_LEDS * 3	// IMPORTANT: set the max MILLI_AMPS no greater than your power supply (1A = 1000mA)
+#ifndef MILLI_AMPS				// Allows overriding in profile
+	#define MILLI_AMPS	NUM_LEDS * 3	// IMPORTANT: set the max MILLI_AMPS no greater than your power supply (1A = 1000mA)
+#endif
 #define VOLTAGE		   4.2		//Set voltage used 4.2v for Lipo or 5v for 5V power supply or USB battery bank
 #define WIFI_MAX_POWER     2		//Set wifi output power between 0 and 20.5db (default around 19db)
 

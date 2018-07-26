@@ -56,3 +56,13 @@ const uint8_t playlist[] { 0,9,24,1,12,3,17,4,22,5,11,25,2,13,28,6,14 };	// See 
 const uint8_t playlistCount = ARRAY_SIZE(playlist);
 uint8_t currentPlaylistIndex = 0;		// Index number of which playlist position is current
 
+
+//#define FIBEROPTIC_COLUMN 5			// Uncomment to set one column for fiberoptic use. Increases brightness to 100% for this column
+//#define FIBEROPTIC_ROW 3			// Uncomment to set one row for fiberoptic use. Increases brightness to 100% for this row
+//#define FIBEROPTIC_ARRAY			// Uncomment assign array for fiberoptic use. Increases brightness to 100% for leds in array
+const uint8_t fiberopticLEDs[] = { 8, 6, 7, 5, 3, 0, 9 ];
+const uint8_t fiberopticCount = ARRAY_SIZE(fiberopticLEDs);
+
+// Override MILLI_AMPS for fiberoptics by uncommenting and setting accordingly.
+// IMPORTANT: set the max MILLI_AMPS no greater than your power supply (1A = 1000mA)
+//#define MILLI_AMPS (14*3)+(8*60)	// Example shows 14 LEDs @ 3ma each + 8 LEDs @ 60ma each for fiberoptics
