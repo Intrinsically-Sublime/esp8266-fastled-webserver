@@ -140,23 +140,6 @@ int XY(int x, int y, bool wrap = false) {	// x = Width, y = Height
 		pixNum = (x * XorY) + y;
 	#endif
 
-	#if defined FIBEROPTIC_COLUMN
-		if (x == FIBEROPTIC_COLUMN) {
-			leds[pixNum].maximizeBrightness();
-		}
-	#elif defined FIBEROPTIC_ROW
-		if (y == FIBEROPTIC_ROW) {
-			leds[pixNum].maximizeBrightness();
-		}
-	#elif defined FIBEROPTIC_ARRAY
-		for (int p = 0; p < fiberopticCount; p++) {
-			if (pixNum == fiberopticLEDs[p]) {
-				leds[pixNum].maximizeBrightness();
-				continue;
-			}
-		}
-	#endif
-
 	return pixNum;
 }
 
@@ -898,7 +881,37 @@ void loop() {
 	// Call the current pattern function once, updating the 'leds' array
 	patterns[currentPatternIndex].pattern();
 
+	maximizeFiberoptics();
 	FastLED.show();
+}
+
+void maximizeFiberoptics()
+{
+	#if defined FIBEROPTIC_COLUMN || FIBEROPTIC_ROW
+	for (int y = 0; y < MATRIX_WIDTH; y++) {
+		for (int x = 0; x < MATRIX_HEIGHT; x++) {
+
+			#if defined FIBEROPTIC_COLUMN
+			if (y == FIBEROPTIC_COLUMN) {
+				leds[XY(x,y)].maximizeBrightness();
+			} else {
+				leds[XY(x,y)].nscale8_video(128);
+			}
+			#elif defined FIBEROPTIC_ROW
+			if (x == FIBEROPTIC_ROW) {
+				leds[XY(x,y].maximizeBrightness();
+			} else {
+				leds[XY(x,y)].nscale8_video(128);
+			}
+			#endif
+		}
+	}
+	#elif defined FIBEROPTIC_ARRAY
+	nscale8_video(leds, NUM_LEDS, 128);
+	for (int p = 0; p < fiberopticCount; p++) {
+		leds[fiberopticLEDs[p]].maximizeBrightness();
+	}
+	#endif
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
