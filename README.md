@@ -100,42 +100,42 @@ https://intrinsically-sublime.github.io/FastLED-XY-Map-Generator/
 * Settings
   * Color Picker -- Sets the color
 ---
-#### Spectrum Palette Waves 1 -- Colors flows out from center pixel
+##### Spectrum Palette Waves 1 -- Colors flows out from center pixel
   * General Palettes -- See Palettes section below
   * Audio controlled
 ---
-#### Spectrum Palette Waves 2 -- Colors flows out from center pixel
+##### Spectrum Palette Waves 2 -- Colors flows out from center pixel
   * General Palettes -- See Palettes section below
   * Audio controlled
 ---
-#### Spectrum Waves 1 -- Colors radiate out from center pixel
+##### Spectrum Waves 1 -- Colors radiate out from center pixel
   * Audio controlled
 ---
-#### Spectrum Waves 2 -- Colors radiate out from center pixel
+##### Spectrum Waves 2 -- Colors radiate out from center pixel
   * Audio controlled
 ---
-#### Spectrum Waves 3 -- Colors radiate out from center pixel
+##### Spectrum Waves 3 -- Colors radiate out from center pixel
   * Audio controlled
 ---
-#### VU -- Colors radiate toward center from ends
+##### VU -- Colors radiate toward center from ends
   * Audio controlled
 ---
-#### Analyzer Peak Columns -- Vertical VU meter with slowly dropping peaks
+##### Analyzer Peak Columns -- Vertical VU meter with slowly dropping peaks
   * Audio controlled
 ---
-#### Funky Noise -- XY Noise pattern manipulated by audio (Brightness varies quickly)
+##### Funky Noise -- XY Noise pattern manipulated by audio (Brightness varies quickly)
   * Audio controlled
 ---
-#### Funky Noise 2 -- XY Noise pattern manipulated by audio (Brightness varies smoothly)
+##### Funky Noise 2 -- XY Noise pattern manipulated by audio (Brightness varies smoothly)
   * Audio controlled
 ---
-#### Funky Noise 3 -- XY Noise pattern manipulated by audio (Scale varies smoothly)
+##### Funky Noise 3 -- XY Noise pattern manipulated by audio (Scale varies smoothly)
   * Audio controlled
 ---
-#### Funky Noise 4 -- XY Noise pattern manipulated by audio (Twinkly)
+##### Funky Noise 4 -- XY Noise pattern manipulated by audio (Twinkly)
   * Audio controlled
 ---
-#### Funky Noise 5 -- XY Noise pattern manipulated by audio (Flows downwards)
+##### Funky Noise 5 -- XY Noise pattern manipulated by audio (Flows downwards)
   * Audio controlled
 ---
 
