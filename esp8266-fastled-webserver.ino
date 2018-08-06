@@ -881,37 +881,37 @@ void loop() {
 	// Call the current pattern function once, updating the 'leds' array
 	patterns[currentPatternIndex].pattern();
 
+	#if defined FIBEROPTIC_COLUMN || FIBEROPTIC_ROW || FIBEROPTIC_ARRAY
 	maximizeFiberoptics();
+	#endif
 	FastLED.show();
 }
 
 void maximizeFiberoptics()
 {
-	#if defined FIBEROPTIC_COLUMN || FIBEROPTIC_ROW
+/* Works by dimming all other LEDs so that after power managment has done it's magic the Fiberoptic LEDs are
+ as bright as they can be in comparrison to the rest of the LEDs. */
+
 	for (int y = 0; y < MATRIX_WIDTH; y++) {
 		for (int x = 0; x < MATRIX_HEIGHT; x++) {
 
 			#if defined FIBEROPTIC_COLUMN
-			if (y == FIBEROPTIC_COLUMN) {
-				leds[XY(x,y)].maximizeBrightness();
-			} else {
-				leds[XY(x,y)].nscale8_video(128);
+			if (y == !FIBEROPTIC_COLUMN) {
+				leds[XY(x,y)].nscale8_video(48);
 			}
 			#elif defined FIBEROPTIC_ROW
-			if (x == FIBEROPTIC_ROW) {
-				leds[XY(x,y].maximizeBrightness();
-			} else {
-				leds[XY(x,y)].nscale8_video(128);
+			if (x == !FIBEROPTIC_ROW) {
+				leds[XY(x,y)].nscale8_video(48);
+			}
+			#elif defined FIBEROPTIC_ARRAY // This method is inefficient as it has to loop through the entire fiberoptic array for every led
+			for (int p = 0; p < fiberopticCount; p++) {
+				if (XY(x,y) == !p) {
+					leds[XY(x,y)].nscale8_video(48);
+				}
 			}
 			#endif
 		}
 	}
-	#elif defined FIBEROPTIC_ARRAY
-	nscale8_video(leds, NUM_LEDS, 128);
-	for (int p = 0; p < fiberopticCount; p++) {
-		leds[fiberopticLEDs[p]].maximizeBrightness();
-	}
-	#endif
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
